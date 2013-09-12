@@ -22,9 +22,11 @@ See the extension page for instructions on use. Note that each section below
 will override definitions from previous sections UNLESS a + (plus) precedes 
 the definition.
 
-<syntaxhighlight>
+<syntaxhighlight lang="INI">
+All Pages = Group:sysop
+
 [Namespace Permissions]
-User = SpecialApprover:Self
+User = Self
 
 [Category Permissions]
 

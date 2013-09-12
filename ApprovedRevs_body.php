@@ -15,6 +15,8 @@ class ApprovedRevs {
 	static $mApprovedRevIDForPage = array();
 	static $mUserCanApprove = null;
 	static $permissions = null;
+	static $mUserGroups = null;
+	static $james_test = null; // because jamesmontalvo3 doesn't know a better way to test things...
 	
 	/**
 	 * Gets the approved revision ID for this page, or null if there isn't
@@ -135,8 +137,8 @@ class ApprovedRevs {
 		$perms = self::getPermissions();
 		if ( in_array( $title->getNamespace(), $perms['Namespaces'] ) )
 			return $title->isApprovable = true;
-		// if ( count( array_intersect( PAGE_CATEGORIES, $perms['Categories'] ) ) > 0 )
-			// return $title->isApprovable = true;
+		if ( count( array_intersect( self::getCategoryList( $title ), $perms['Categories'] ) ) > 0 )
+			return $title->isApprovable = true;
 		if ( in_array( $title->getText(), $perms['Pages'] ) )
 			return $title->isApprovable = true;
 		
@@ -175,22 +177,14 @@ class ApprovedRevs {
 			return self::$mUserCanApprove;
 
 		// other static methods within ApprovedRevs class will require access to $title
-		self::$mwTitleObj = $title;
+		// self::$mwTitleObj = $title;
 		// Jamesmontalvo3: After reading through more of the code I think this may break in some cases...
-		// TODO: rework w/o self::$mwTitleObj if required
+		// TODO: rework w/o self::$mwTitleObj if required - rework may be complete...leaving this here until I get the extension working again
 		
 			
-		$page_ns     = MWNamespace::getCanonicalNamespaces()[ self::$mwTitleObj->getNamespace() ]; // NS text
-		//$page_cat    = die("TODO: HOW DO WE DO THIS?"); // going to use self::$mwTitleObj->getCategorySortkey() or self::$mwTitleObj->getParentCategoryTree()
-		$page_actual = self::$mwTitleObj->getText();
-		
-		if ( ! isset(self::$james_test) ) {
-			// I don't understand from the documentation what these methods do...gotta check them out on a real page...
-			print_r($title->getCategorySortkey());
-			echo "<br /><br />\n\n";
-			print_r($title->getParentCategoryTree());
-			self::$james_test = true;
-		}
+		$page_ns     = MWNamespace::getCanonicalNamespaces()[ $title->getNamespace() ]; // NS text
+		$page_cat    = self::getCategoryList( $title );
+		$page_actual = $title->getText();
 		
 		$perms = self::getPermissions() ;
 			
@@ -337,12 +331,12 @@ class ApprovedRevs {
 			return self::$permissions;
 			
 		preg_match_all(
-			'/<syntaxhighlight>(.*?)<\/syntaxhighlight>/si', 
+			'/<syntaxhighlight lang="INI">(.*?)<\/syntaxhighlight>/si', 
 			wfMessage( 'approvedrevs-permissions' )->text(), 
 			$matches);
-		
+				
 		self::$permissions = parse_ini_string( $matches[1][0], true );
-		
+				
 		// create arrays of N/C/P's for quickly checking if page is approvable
 		self::$permissions['Namespaces'] = array();
 		self::$permissions['Categories'] = array();
@@ -362,6 +356,7 @@ class ApprovedRevs {
 	}
 
 	public static function checkIfUserInPerms( $perms, $inclusive=false ) {
+		global $wgUser;
 		
 		// if this isn't going to overwrite other permissions, and other permissions say the user
 		// can approve, no need to check further
@@ -382,7 +377,7 @@ class ApprovedRevs {
 						return self::$mUserCanApprove = true;
 					break;
 				case "Group":
-					if ( in_array( trim($perm[1]), self::$user_groups ) )
+					if ( in_array( trim($perm[1]), $wgUser->getGroups() ) )
 						return self::$mUserCanApprove = true;
 					break;
 				case "Self":
@@ -443,4 +438,24 @@ class ApprovedRevs {
 		// as far as I know usernames cannot have slashes in them, so this should be okay
 		return explode('/', $wgTitle->getText())[0] == $wgUser->getName();
 	}
+
+	public static function getCategoryList ( $title ) {
+	
+		$catTree = $title->getParentCategoryTree();		
+		return array_unique( self::getCategoryListHelper($catTree) );
+		
+	}
+	
+	public static function getCategoryListHelper ( $catTree ) {
+
+		$out = array();
+		foreach($catTree as $cat => $parentCats) {
+			$out[] = explode(':', $cat)[1];
+			if ( count($parentCats) > 0 )
+				array_merge($out, self::getCategoryListHelper( $parentCats ));
+		}
+		return $out;
+	
+	}
+	
 }

@@ -152,17 +152,40 @@ class ApprovedRevs {
 			return true;
 		} elseif ( self::$mUserCanApprove === false ) {
 			return false;
-		} elseif ( $title->userCan( 'approverevisions' ) ) {
-			self::$mUserCanApprove = true;
-			return true;
+
+		// QUESTION: should this still exist to make it so certain people can 
+		// be gauranteed approval rights, even if MediaWiki:ApprovedRevsPermissions
+		// says otherwise ???
+
+		// } elseif ( $title->userCan( 'approverevisions' ) ) {
+		// 	self::$mUserCanApprove = true;
+		// 	return true;
+		
 		} else {
-			// If the user doesn't have the 'approverevisions'
-			// permission, they still might be able to approve
-			// revisions - it depends on whether the current
-			// namespace is within the admin-defined
-			// $egApprovedRevsSelfOwnedNamespaces array.
 			global $wgUser;
-			$namespace = $title->getNamespace();
+			$title = $title->getText();
+			$namespace = $title->getNamespace(); // is numeric
+			$namespaces = MWNamespace::getCanonicalNamespaces(); // has form NS_USER => "User"
+
+			preg_match_all(
+				'/<syntaxhighlight>(.*?)<\/syntaxhighlight>/si', 
+				wfMessage( 'approvedrevs-permissions' )->text(), 
+				$matches);
+
+			$perms = parse_ini_string( $matches[1][0] , true );
+
+			foreach ($perms['Page Permissions'] as $page => $approvers) {
+				if ( substr($page, 0, 1) === '+' && substr($page, 1) === $title ) {
+
+
+				} elseif ( $page === $title ) {
+					
+				}
+
+				self::isInApprovers($user, $approvers)
+
+			}
+
 			if ( in_array( $namespace, $egApprovedRevsSelfOwnedNamespaces ) ) {
 				if ( $namespace == NS_USER ) {
 					// If the page is in the 'User:'

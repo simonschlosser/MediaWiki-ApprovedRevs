@@ -14,6 +14,24 @@ $messages = array();
 $messages['en'] = array(
 	// user messages
 	'approvedrevs-desc' => 'Set a single revision of a page as approved',
+
+	// long default definition ... is this the best way to do this?
+	'approvedrevs-permissions' => 'This page defines who can approve pages using 
+[https://www.mediawiki.org/wiki/Extension:Approved_Revs Extension:ApprovedRevs]. 
+See the extension page for instructions on use. Note that each section below 
+will override definitions from previous sections UNLESS a + (plus) precedes 
+the definition.
+
+<syntaxhighlight>
+[Namespace Permissions]
+User = SpecialApprover:Self
+
+[Category Permissions]
+
+[Page Permissions]
+Main Page = Group:Sysop
+</syntaxhighlight>
+',
 	'approvedrevs-logname' => 'Revision approval log',
 	'approvedrevs-logdesc' => 'This is the log of revisions that have been approved.',
 	'approvedrevs-approve' => 'approve',

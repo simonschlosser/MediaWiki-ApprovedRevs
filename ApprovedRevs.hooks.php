@@ -331,6 +331,7 @@ class ApprovedRevsHooks {
 		// problem is that, pre-SF 2.0.2, that variable wasn't set
 		// correctly.
 		global $wgTitle;
+		// TODO: $wgTitle was deprecated in MW 1.19. Use another method of getting to it
 		$approvedRevID = ApprovedRevs::getApprovedRevID( $wgTitle );
 		$latestRevID = $wgTitle->getLatestRevID();
 		if ( ! empty( $approvedRevID ) && $approvedRevID != $latestRevID ) {

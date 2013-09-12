@@ -14,6 +14,7 @@ class ApprovedRevs {
 	static $mApprovedContentForPage = array();
 	static $mApprovedRevIDForPage = array();
 	static $mUserCanApprove = null;
+	static $permissions = null;
 	
 	/**
 	 * Gets the approved revision ID for this page, or null if there isn't
@@ -89,7 +90,7 @@ class ApprovedRevs {
 			return false;
 		}
 		// check if it's an action other than viewing
-		global $wgRequest;
+		global $wgRequest; // TODO: why is this here a second time?
 		if ( $wgRequest->getCheck( 'action' ) &&
 			$wgRequest->getVal( 'action' ) != 'view' &&
 			$wgRequest->getVal( 'action' ) != 'purge' &&
@@ -116,13 +117,37 @@ class ApprovedRevs {
 			$title->isApprovable = false;
 			return $title->isApprovable;			
 		}
+
+
+		// Jamesmontalvo3 suggesting removal of this. approved rev namespaces no handled in
+		// approvedrevs-permissions
 		
 		// check the namespace
-		global $egApprovedRevsNamespaces;
-		if ( in_array( $title->getNamespace(), $egApprovedRevsNamespaces ) ) {
-			$title->isApprovable = true;
-			return $title->isApprovable;
-		}
+		// global $egApprovedRevsNamespaces;
+		// if ( in_array( $title->getNamespace(), $egApprovedRevsNamespaces ) ) {
+			// $title->isApprovable = true;
+			// return $title->isApprovable;
+		// }
+
+
+
+		
+		$perms = self::getPermissions();
+		if ( in_array( $title->getNamespace(), $perms['Namespaces'] ) )
+			return $title->isApprovable = true;
+		// if ( count( array_intersect( PAGE_CATEGORIES, $perms['Categories'] ) ) > 0 )
+			// return $title->isApprovable = true;
+		if ( in_array( $title->getText(), $perms['Pages'] ) )
+			return $title->isApprovable = true;
+		
+
+		
+		// Jamesmontalvo3 question/discussion:
+		// Regarding below: not sure if we should keep this. It seems cleaner to say you can add 
+		// the approval-requirement on a case-by-case basis via the approvedrevs-permissions page
+		// than to allow any user to throw __APPROVEDREVS__ onto a page. Also, with the new 
+		// implementation only people with "All Pages" permissions (probably just sysops in most 
+		// cases) will be able to approve this. 
 
 		// it's not in an included namespace, so check for the page
 		// property - for some reason, calling the standard
@@ -142,82 +167,53 @@ class ApprovedRevs {
 		return $isApprovable;
 	}
 
-	public static function userCanApprove( $title ) {
-		global $egApprovedRevsSelfOwnedNamespaces;
+	public static function userCanApprove ( $title ) {
 
-		// $mUserCanApprove is a static variable used for
-		// "caching" the result of this function, so that
-		// it only has to be called once.
-		if ( self::$mUserCanApprove ) {
-			return true;
-		} elseif ( self::$mUserCanApprove === false ) {
-			return false;
+		// $mUserCanApprove is a static variable used for "caching" the result
+		// of this function, so the logic only has to be executed once.
+		if ( isset(self::$mUserCanApprove) )
+			return self::$mUserCanApprove;
 
-		// QUESTION: should this still exist to make it so certain people can 
-		// be gauranteed approval rights, even if MediaWiki:ApprovedRevsPermissions
-		// says otherwise ???
-
-		// } elseif ( $title->userCan( 'approverevisions' ) ) {
-		// 	self::$mUserCanApprove = true;
-		// 	return true;
+		// other static methods within ApprovedRevs class will require access to $title
+		self::$mwTitleObj = $title;
+		// Jamesmontalvo3: After reading through more of the code I think this may break in some cases...
+		// TODO: rework w/o self::$mwTitleObj if required
 		
-		} else {
-			global $wgUser;
-			$title = $title->getText();
-			$namespace = $title->getNamespace(); // is numeric
-			$namespaces = MWNamespace::getCanonicalNamespaces(); // has form NS_USER => "User"
-
-			preg_match_all(
-				'/<syntaxhighlight>(.*?)<\/syntaxhighlight>/si', 
-				wfMessage( 'approvedrevs-permissions' )->text(), 
-				$matches);
-
-			$perms = parse_ini_string( $matches[1][0] , true );
-
-			foreach ($perms['Page Permissions'] as $page => $approvers) {
-				if ( substr($page, 0, 1) === '+' && substr($page, 1) === $title ) {
-
-
-				} elseif ( $page === $title ) {
-					
-				}
-
-				self::isInApprovers($user, $approvers)
-
-			}
-
-			if ( in_array( $namespace, $egApprovedRevsSelfOwnedNamespaces ) ) {
-				if ( $namespace == NS_USER ) {
-					// If the page is in the 'User:'
-					// namespace, this user can approve
-					// revisions if it's their user page.
-					if ( $title->getText() == $wgUser->getName() ) {
-						self::$mUserCanApprove = true;
-						return true;
-					}
-				} else {
-					// Otherwise, they can approve revisions
-					// if they created the page.
-					// We get that information via a SQL
-					// query - is there an easier way?
-					$dbr = wfGetDB( DB_SLAVE );
-					$row = $dbr->selectRow(
-						array( 'revision', 'page' ),
-						'revision.rev_user_text',
-						array( 'page.page_title' => $title->getDBkey() ),
-						null,
-						array( 'ORDER BY' => 'revision.rev_id ASC' ),
-						array( 'revision' => array( 'JOIN', 'revision.rev_page = page.page_id' ) )
-					);
-					if ( $row->rev_user_text == $wgUser->getName() ) {
-						self::$mUserCanApprove = true;
-						return true;
-					}
-				}
-			}
+			
+		$page_ns     = MWNamespace::getCanonicalNamespaces()[ self::$mwTitleObj->getNamespace() ]; // NS text
+		//$page_cat    = die("TODO: HOW DO WE DO THIS?"); // going to use self::$mwTitleObj->getCategorySortkey() or self::$mwTitleObj->getParentCategoryTree()
+		$page_actual = self::$mwTitleObj->getText();
+		
+		if ( ! isset(self::$james_test) ) {
+			// I don't understand from the documentation what these methods do...gotta check them out on a real page...
+			print_r($title->getCategorySortkey());
+			echo "<br /><br />\n\n";
+			print_r($title->getParentCategoryTree());
+			self::$james_test = true;
 		}
-		self::$mUserCanApprove = false;
-		return false;
+		
+		$perms = self::getPermissions() ;
+			
+		if ( self::checkIfUserInPerms($perms['All Pages']) )
+			return self::$mUserCanApprove;
+			
+		foreach ($perms['Namespace Permissions'] as $ns => $perms)
+			if ($ns == $page_ns)
+				self::checkIfUserInPerms( $perms );
+			
+		foreach ($perms['Category Permissions'] as $cat => $perms) {
+			$cat = (  $inclusive = ($cat[0]==='+')  ) ? substr($cat, 1) : $cat;
+			if ( in_array($cat, $page_cats) )
+				self::checkIfUserInPerms( $perms, $inclusive );
+		}
+		
+		foreach ($perms['Page Permissions'] as $pg => $perms) {
+			$pg = (  $inclusive = ($pg[0]==='+')  ) ? substr($pg, 1) : $pg;
+			if ($pg == $page_actual)
+				self::checkIfUserInPerms( $perms, $inclusive );
+		}
+		
+		return self::$mUserCanApprove;
 	}
 
 	public static function saveApprovedRevIDInDB( $title, $rev_id ) {
@@ -326,5 +322,125 @@ class ApprovedRevs {
 			'href' => "$egApprovedRevsScriptPath/ApprovedRevs.css"
 		);
 		$wgOut->addLink( $link );
+	}
+	
+	
+	/**
+	 *  All methods below are totally new from jamesmontalvo3
+	 **/
+		
+		
+	// pull INI-file content from approvedrevs-permissions
+	public static function getPermissions () {
+
+		if ( self::$permissions )
+			return self::$permissions;
+			
+		preg_match_all(
+			'/<syntaxhighlight>(.*?)<\/syntaxhighlight>/si', 
+			wfMessage( 'approvedrevs-permissions' )->text(), 
+			$matches);
+		
+		self::$permissions = parse_ini_string( $matches[1][0], true );
+		
+		// create arrays of N/C/P's for quickly checking if page is approvable
+		self::$permissions['Namespaces'] = array();
+		self::$permissions['Categories'] = array();
+		self::$permissions['Pages']      = array();
+		
+		foreach(self::$permissions['Namespace Permissions'] as $ns => $perms)
+			array_push(self::$permissions['Namespaces'], $ns);
+		
+		foreach(self::$permissions['Category Permissions'] as $cat => $perms)
+			array_push(self::$permissions['Categories'], ($cat[0]=='+')?substr($cat,1):$cat );
+		
+		foreach(self::$permissions['Page Permissions'] as $pg => $perms)
+			array_push(self::$permissions['Pages'], ($pg[0]=='+')?substr($pg,1):$pg );
+			
+		return self::$permissions;
+
+	}
+
+	public static function checkIfUserInPerms( $perms, $inclusive=false ) {
+		
+		// if this isn't going to overwrite other permissions, and other permissions say the user
+		// can approve, no need to check further
+		if ( $inclusive == true && self::$mUserCanApprove == true)
+			return true;
+			
+		// is like: array("User:John", "User:Jen", "Group:sysop", "Self", "Creator", "Property:Reviewer")
+		$perms = explode(',', $perms);
+		
+		foreach($perms as $perm) {
+		
+			// $perm[0] == perm type, $perm[1] == perm value (if applicable)
+			$perm = explode(':', $perm);
+			
+			switch ( trim($perm[0]) ) {
+				case "User":
+					if ( trim($perm[1]) == $wgUser->getName() )
+						return self::$mUserCanApprove = true;
+					break;
+				case "Group":
+					if ( in_array( trim($perm[1]), self::$user_groups ) )
+						return self::$mUserCanApprove = true;
+					break;
+				case "Self":
+					if ( self::usernameIsBasePageName() )
+						return self::$mUserCanApprove = true;
+					break;
+				case "Creator":
+					if ( self::isPageCreator() )
+						return self::$mUserCanApprove = true;
+					break;
+				case "Property":
+					die("Not yet implemented");
+					break;
+				default:
+					die("OH NO!");
+			}
+		}
+		
+		// if $inclusive==true, the fact that this call to checkIfUserInPerms() didn't find a match does
+		// not mean that that the user is denied. Instead return the unmodified value of  
+		// self::$mUserCanApprove, which could be either true or false depending on previous passes
+		// through checkIfUserInPerms()
+		if ($inclusive)
+			return self::$mUserCanApprove;
+
+		// if $inclusive==false, the previous value of $mUserCanApprove is irrelevant. return false 
+		// since no matches were found here (still could be overridden by later passes)
+		else
+			return self::$mUserCanApprove = false;
+		
+	}
+	
+	// returns true if $wgUser was the user who created the page
+	public static function isPageCreator () {
+		global $wgUser;
+		$dbr = wfGetDB( DB_SLAVE );
+		$row = $dbr->selectRow(
+			array( 'revision', 'page' ),
+			'revision.rev_user_text',
+			array( 'page.page_title' => $title->getDBkey() ),
+			null,
+			array( 'ORDER BY' => 'revision.rev_id ASC' ),
+			array( 'revision' => array( 'JOIN', 'revision.rev_page = page.page_id' ) )
+			// TODO: add a "LIMIT" restriction to not pull excessive amounts of data from DB?
+		);
+		return $row->rev_user_text == $wgUser->getName();
+	}
+
+	// Determines if username is the base pagename, e.g. if user is User:Jamesmontalvo3 then this 
+	// returns true for pages named Jamesmontalvo3, Jamesmontalvo3/My Subpage, User:Jamesmontalvo3,
+	// User:Jamesmontalvo3/Subpage
+	// This is for use with the "Self" keyword in approvedrevs-permissions. NOTE THAT THIS WORKS 
+	// OUTSIDE OF THE User NAMESPACE! This was not initially intended, but seems legitimate.
+	public static function usernameIsBasePageName () {
+		global $wgUser, $wgTitle;
+
+		// explode on slash to just get the first part (if it is a subpage)
+		// as far as I know usernames cannot have slashes in them, so this should be okay
+		return explode('/', $wgTitle->getText())[0] == $wgUser->getName();
 	}
 }

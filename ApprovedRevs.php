@@ -9,7 +9,9 @@ if ( !defined( 'MEDIAWIKI' ) ) die();
  * @author Yaron Koren
  */
 
-define( 'APPROVED_REVS_VERSION', '0.6.5' );
+// Jamesmontalvo3 recommending bumping this to at least 0.7.0 since it's a major change to 
+// the way permissions and "approvability" are implemented
+define( 'APPROVED_REVS_VERSION', '0.7.0' );
 
 // credits
 $wgExtensionCredits['other'][] = array(
@@ -81,8 +83,8 @@ $wgLogActions['approval/approve'] = 'approvedrevs-approveaction';
 $wgLogActions['approval/unapprove'] = 'approvedrevs-unapproveaction';
 
 // user rights
-$wgAvailableRights[] = 'approverevisions';
-$wgGroupPermissions['sysop']['approverevisions'] = true;
+$wgAvailableRights[] = 'approverevisions'; // jamesmontalvo3: do we remove this or leave it behind even though it's not being used anymore?
+$wgGroupPermissions['sysop']['approverevisions'] = true; // jamesmontalvo3: do we remove this or leave it behind even though it's not being used anymore?
 $wgAvailableRights[] = 'viewlinktolatest';
 $wgGroupPermissions['*']['viewlinktolatest'] = true;
 

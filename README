@@ -33,3 +33,10 @@ line to your 'LocalSettings.php' file:
 
 Comments, questions, suggestions and bug reports should be sent to Yaron
 Koren, at yaron57@gmail.com.
+
+== Future Considerations ==
+Possibly adding the following types:
+* No Repeat - most recent approver cannot approve (so you get new people approving)
+* Significant - Only people who have made significant contributions prior to current approved rev can approve it
+* Property:PROP_NAME - So you can define a property PROP_NAME that points to a user or users who can approve the page
+* Require:2 - Method to say number of people to mark approved prior to changing the approved revision

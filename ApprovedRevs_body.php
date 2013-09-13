@@ -131,11 +131,9 @@ class ApprovedRevs {
 			// return $title->isApprovable;
 		// }
 
-
-
-		
 		$perms = self::getPermissions();
-		if ( in_array( $title->getNamespace(), $perms['Namespaces'] ) )
+
+		if ( in_array( self::getNamespaceName( $title ), $perms['Namespaces'] ) )
 			return $title->isApprovable = true;
 		if ( count( array_intersect( self::getCategoryList( $title ), $perms['Categories'] ) ) > 0 )
 			return $title->isApprovable = true;
@@ -181,27 +179,27 @@ class ApprovedRevs {
 		// Jamesmontalvo3: After reading through more of the code I think this may break in some cases...
 		// TODO: rework w/o self::$mwTitleObj if required - rework may be complete...leaving this here until I get the extension working again
 		
-			
-		$page_ns     = MWNamespace::getCanonicalNamespaces()[ $title->getNamespace() ]; // NS text
-		$page_cat    = self::getCategoryList( $title );
-		$page_actual = $title->getText();
 		
-		$perms = self::getPermissions() ;
-			
-		if ( self::checkIfUserInPerms($perms['All Pages']) )
+		$page_ns     = self::getNamespaceName( $title );
+		$page_cats   = self::getCategoryList( $title );
+		$page_actual = $title->getText();
+
+		$permissions = self::getPermissions();
+
+		if ( self::checkIfUserInPerms($permissions['All Pages']) )
 			return self::$mUserCanApprove;
-			
-		foreach ($perms['Namespace Permissions'] as $ns => $perms)
+
+		foreach ($permissions['Namespace Permissions'] as $ns => $perms)
 			if ($ns == $page_ns)
 				self::checkIfUserInPerms( $perms );
-			
-		foreach ($perms['Category Permissions'] as $cat => $perms) {
+
+		foreach ($permissions['Category Permissions'] as $cat => $perms) {
 			$cat = (  $inclusive = ($cat[0]==='+')  ) ? substr($cat, 1) : $cat;
 			if ( in_array($cat, $page_cats) )
 				self::checkIfUserInPerms( $perms, $inclusive );
 		}
 		
-		foreach ($perms['Page Permissions'] as $pg => $perms) {
+		foreach ($permissions['Page Permissions'] as $pg => $perms) {
 			$pg = (  $inclusive = ($pg[0]==='+')  ) ? substr($pg, 1) : $pg;
 			if ($pg == $page_actual)
 				self::checkIfUserInPerms( $perms, $inclusive );
@@ -412,12 +410,12 @@ class ApprovedRevs {
 	
 	// returns true if $wgUser was the user who created the page
 	public static function isPageCreator () {
-		global $wgUser;
+		global $wgUser, $wgTitle;
 		$dbr = wfGetDB( DB_SLAVE );
 		$row = $dbr->selectRow(
 			array( 'revision', 'page' ),
 			'revision.rev_user_text',
-			array( 'page.page_title' => $title->getDBkey() ),
+			array( 'page.page_title' => $wgTitle->getDBkey() ),
 			null,
 			array( 'ORDER BY' => 'revision.rev_id ASC' ),
 			array( 'revision' => array( 'JOIN', 'revision.rev_page = page.page_id' ) )
@@ -436,21 +434,31 @@ class ApprovedRevs {
 
 		// explode on slash to just get the first part (if it is a subpage)
 		// as far as I know usernames cannot have slashes in them, so this should be okay
-		return explode('/', $wgTitle->getText())[0] == $wgUser->getName();
+		$title_parts = explode('/', $wgTitle->getText()); // no array dereference in PHP < 5.4 :-(
+		return $title_parts[0] == $wgUser->getName();
+	}
+
+	public static function getNamespaceName ( $title ) {
+
+		$page_ns = MWNamespace::getCanonicalNamespaces();
+		$page_ns = $page_ns[ $title->getNamespace() ]; // NS text
+		if ($page_ns == "")
+			$page_ns = "Main";
+		return $page_ns;
+
 	}
 
 	public static function getCategoryList ( $title ) {
-	
-		$catTree = $title->getParentCategoryTree();		
-		return array_unique( self::getCategoryListHelper($catTree) );
-		
+		$catTree = $title->getParentCategoryTree();
+		return array_unique( self::getCategoryListHelper($catTree) );		
 	}
 	
 	public static function getCategoryListHelper ( $catTree ) {
 
 		$out = array();
 		foreach($catTree as $cat => $parentCats) {
-			$out[] = explode(':', $cat)[1];
+			$cat_parts = explode(':', $cat); // best var name ever!
+			$out[] = str_replace('_', ' ', $cat_parts[1]); // TODO: anything besided _ need to be replaced?
 			if ( count($parentCats) > 0 )
 				array_merge($out, self::getCategoryListHelper( $parentCats ));
 		}

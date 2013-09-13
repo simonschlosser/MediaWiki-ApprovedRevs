@@ -27,11 +27,15 @@ All Pages = Group:sysop
 
 [Namespace Permissions]
 User = Self
+Help = Group:bureaucrat
 
 [Category Permissions]
+Approved Revision Required = Creator
 
 [Page Permissions]
-Main Page = Group:Sysop
+Main Page = Group:sysop
+Test Page 2 = Creator
+Test Page 3 = User:Scott, Group:bureaucrat
 </syntaxhighlight>
 ',
 	'approvedrevs-logname' => 'Revision approval log',

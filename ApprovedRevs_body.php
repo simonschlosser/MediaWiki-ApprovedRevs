@@ -397,7 +397,7 @@ class ApprovedRevs {
 						return self::$mUserCanApprove = true;
 					break;
 				default:
-					die("OH NO!");
+					echo "Error in checkIfUserInPerms()"; // had this die() before, but it killed it when I tweaked the approvedrevs-permissions page
 			}
 		}
 		

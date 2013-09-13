@@ -22,20 +22,43 @@ See the extension page for instructions on use. Note that each section below
 will override definitions from previous sections UNLESS a + (plus) precedes 
 the definition.
 
+== How to use ==
+Need basic explanation of how to configure this page. Full explanation can be on ApprovedRevs page.
+
+If you want to use the "Property" definition you must have Semantic MediaWiki installed.
+
+== Configuration ==
 <syntaxhighlight lang="INI">
+;   Users with "All Pages" rights cannot have their approver rights overridden. If a page is
+;   approvable, and the user has permissions defined in the line below, they can approve that page.
 All Pages = Group:sysop
 
 [Namespace Permissions]
+Main = Group:sysop
 User = Self
-Help = Group:bureaucrat
+Template = Group:sysop
+Help = Group:sysop
+Project = Group:sysop
+;   If you have a namespace "Blog" in your wiki, uncommenting the line below would make the page
+;   creator the only user with approval rights. Of course, anyone defined in "All Pages" above will
+;   also be able to approve "Blog:Example Page".
+;Blog = Creator
 
 [Category Permissions]
-Approved Revision Required = Creator
+;   uncomment the line below to make pages with category = "Approved Revision Required"
+;   have approved revisions capability, and have those pages only be approved by users
+;   in the groups "reviewer" and "bureaucrat"
+;Approved Revision Required = Group:bureaucrat, Group:reviewer
+
+;   This permission type is only available if you have Semantic MediaWiki installed. If a page 
+;   within the "Lesson Plans" category has the property definition [[Lesson Plan Owner::User:James]]
+;   then User:James will be able to approve the page.
+;Lesson Plans = Property:Lesson Plan Owner
 
 [Page Permissions]
-Main Page = Group:sysop
-Test Page 2 = Creator
-Test Page 3 = User:Scott, Group:bureaucrat
+;Main Page = User:James, User:Yaron, Group:reviewer
+;Help:Contents = Group:editor
+
 </syntaxhighlight>
 ',
 	'approvedrevs-logname' => 'Revision approval log',

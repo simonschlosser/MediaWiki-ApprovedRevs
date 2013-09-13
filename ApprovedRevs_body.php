@@ -183,7 +183,9 @@ class ApprovedRevs {
 		$page_ns     = self::getNamespaceName( $title );
 		$page_cats   = self::getCategoryList( $title );
 		$page_actual = $title->getText();
-
+		if ($page_ns != 'Main')
+			$page_actual = $page_ns . ':' . $page_actual;
+				
 		$permissions = self::getPermissions();
 
 		if ( self::checkIfUserInPerms($permissions['All Pages']) )
@@ -361,33 +363,38 @@ class ApprovedRevs {
 		if ( $inclusive == true && self::$mUserCanApprove == true)
 			return true;
 			
-		// is like: array("User:John", "User:Jen", "Group:sysop", "Self", "Creator", "Property:Reviewer")
-		$perms = explode(',', $perms);
+		// Is like: ["User:John", "User:Jen", "Group:sysop", "Self", "Creator", "Property:Reviewer"]
+		// Thought about strtolower-ing all of this, but "Property:Prop Name" needs to maintain
+		// character case.
+		$perms = explode( ',' , $perms );
+		
+		$userGroups = array_map('strtolower',$wgUser->getGroups());
 		
 		foreach($perms as $perm) {
 		
 			// $perm[0] == perm type, $perm[1] == perm value (if applicable)
 			$perm = explode(':', $perm);
 			
-			switch ( trim($perm[0]) ) {
-				case "User":
-					if ( trim($perm[1]) == $wgUser->getName() )
+			switch ( strtolower(trim($perm[0])) ) {
+				case "user":
+					if ( strtolower(trim($perm[1])) === strtolower($wgUser->getName()) )
 						return self::$mUserCanApprove = true;
 					break;
-				case "Group":
-					if ( in_array( trim($perm[1]), $wgUser->getGroups() ) )
+				case "group":
+					if ( in_array( strtolower(trim($perm[1])), $userGroups ) )
 						return self::$mUserCanApprove = true;
 					break;
-				case "Self":
+				case "self":
 					if ( self::usernameIsBasePageName() )
 						return self::$mUserCanApprove = true;
 					break;
-				case "Creator":
+				case "creator":
 					if ( self::isPageCreator() )
 						return self::$mUserCanApprove = true;
 					break;
-				case "Property":
-					die("Not yet implemented");
+				case "property":
+					if ( self::smwPropertyEqualsCurrentUser( $perm[1] ) )
+						return self::$mUserCanApprove = true;
 					break;
 				default:
 					die("OH NO!");
@@ -435,6 +442,9 @@ class ApprovedRevs {
 		// explode on slash to just get the first part (if it is a subpage)
 		// as far as I know usernames cannot have slashes in them, so this should be okay
 		$title_parts = explode('/', $wgTitle->getText()); // no array dereference in PHP < 5.4 :-(
+		
+		// sticking with case-sensitive here. So username "James Montalvo" won't have "Self" rights
+		// on page "James montalvo". I think that's the right move
 		return $title_parts[0] == $wgUser->getName();
 	}
 
@@ -465,5 +475,23 @@ class ApprovedRevs {
 		return $out;
 	
 	}
-	
+
+	public static function smwPropertyEqualsCurrentUser ( $userProperty ) {
+		global $wgTitle, $wgUser;
+				
+		if ( ! class_exists('SMWHooks') ) // if semantic not installed
+			die('Semantic MediaWiki must be installed to use the ApprovedRevs "Property" definition.');
+		else {	
+			$valueDis = smwfGetStore()->getPropertyValues( 
+				new SMWDIWikiPage( $wgTitle->getDBkey(), $wgTitle->getNamespace(), '' ),
+				new SMWDIProperty( trim($userProperty) ) );
+			
+			foreach ($valueDis as $smwPage) {
+				if ( $smwPage->getTitle()->getText() == $wgUser->getUserPage()->getText() )
+					return true;
+			}
+		}
+		return false;
+	}
+		
 }

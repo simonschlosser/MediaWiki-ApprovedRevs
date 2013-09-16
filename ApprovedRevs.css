@@ -13,3 +13,6 @@ span.approvedRevIsLatest {
 span.approvedRevNotLatest {
 	font-style: italic;
 }
+li.approved-revision {
+	background-color: #cf3 !important;
+}

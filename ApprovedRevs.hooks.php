@@ -396,6 +396,10 @@ class ApprovedRevsHooks {
 		$approvedRevID = ApprovedRevs::getApprovedRevID( $article->getTitle() );
 		$article->getTitle()->approvedRevID = $approvedRevID;
 
+		// seems a bit hackish to put this here, but I'm doing it for now
+		// TODO: put this somewhere legitimate, or somehow legitmize this location
+		ApprovedRevs::addCSS();
+
 		return true;
 	}
 
@@ -406,7 +410,7 @@ class ApprovedRevsHooks {
 	 * revision. If it's the approved revision also add on a "star"
 	 * icon, regardless of the user.
 	 */
-	static function addApprovalLink( $historyPage, &$row , &$s ) {
+	static function addApprovalLink( $historyPage, &$row , &$s, &$classes ) {
 		$title = $historyPage->getTitle();
 		if ( ! ApprovedRevs::pageIsApprovable( $title ) ) {
 			return true;
@@ -417,7 +421,11 @@ class ApprovedRevsHooks {
 		// stored earlier
 		$approvedRevID = $title->approvedRevID;
 		if ( $row->rev_id == $approvedRevID ) {
-			$s .= '&#9733; ';
+			if ( is_array( $classes ) )
+				$classes[] = "approved-revision";
+			else
+				$classes = array("approved-revision");
+			$s = '&#9733; Approved Revision<br />' . $s;
 		}
 		if ( ApprovedRevs::userCanApprove( $title ) ) {
 			if ( $row->rev_id == $approvedRevID ) {

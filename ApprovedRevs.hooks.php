@@ -439,7 +439,7 @@ class ApprovedRevsHooks {
 				);
 				$msg = wfMsg( 'approvedrevs-approve' );
 			}
-			$s .= '(' . Xml::element(
+			$s .= ' (' . Xml::element(
 				'a',
 				array( 'href' => $url ),
 				$msg

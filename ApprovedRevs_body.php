@@ -484,7 +484,7 @@ class ApprovedRevs {
 		else {	
 			$valueDis = smwfGetStore()->getPropertyValues( 
 				new SMWDIWikiPage( $wgTitle->getDBkey(), $wgTitle->getNamespace(), '' ),
-				new SMWDIProperty( trim($userProperty) ) );
+				new SMWDIProperty( SMWPropertyValue::makeUserProperty( $userProperty )->getDBkey() ) );   // trim($userProperty)
 			
 			foreach ($valueDis as $smwPage) {
 				if ( $smwPage->getTitle()->getText() == $wgUser->getUserPage()->getText() )

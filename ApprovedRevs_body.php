@@ -486,8 +486,10 @@ class ApprovedRevs {
 				new SMWDIWikiPage( $wgTitle->getDBkey(), $wgTitle->getNamespace(), '' ),
 				new SMWDIProperty( SMWPropertyValue::makeUserProperty( $userProperty )->getDBkey() ) );   // trim($userProperty)
 			
-			foreach ($valueDis as $smwPage) {
-				if ( $smwPage->getTitle()->getText() == $wgUser->getUserPage()->getText() )
+			foreach ($valueDis as $valueDI) {
+				if ( ! $valueDI instanceof SMWDIWikiPage )
+					die('ApprovedRevs "Property" permissions must use Semantic MediaWiki properties of type "Page"');
+				if ( $valueDI->getTitle()->getText() == $wgUser->getUserPage()->getText() )
 					return true;
 			}
 		}

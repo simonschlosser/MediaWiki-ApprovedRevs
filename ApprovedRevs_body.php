@@ -13,6 +13,7 @@ class ApprovedRevs {
 	// Static arrays to prevent querying the database more than necessary.
 	static $mApprovedContentForPage = array();
 	static $mApprovedRevIDForPage = array();
+	static $mApprovedFileInfo = array();
 	static $mUserCanApprove = null;
 	static $permissions = null;
 	static $mUserGroups = null;
@@ -495,5 +496,99 @@ class ApprovedRevs {
 		}
 		return false;
 	}
+	
+	
+	
+	public static function SetApprovedFileInDB ( $title, $timestamp, $sha1 ) {
+
+		$dbr = wfGetDB( DB_MASTER );
+		$file_title = $title->getDBkey();
+		$old_file_title = $dbr->selectField( 'approved_revs_files', 'file_title', array( 'file_title' => $file_title ) );
+		if ( $old_file_title ) {
+			$dbr->update( 'approved_revs_files', 
+				array( 'approved_timestamp' => $timestamp, 'approved_sha1' => $sha1 ), // update fields
+				array( 'file_title' => $file_title )
+			);
+		} else {
+			$dbr->insert( 'approved_revs_files',
+				array( 'file_title' => $file_title, 'approved_timestamp' => $timestamp, 'approved_sha1' => $sha1 ) 
+			);
+		}
+		// Update "cache" in memory
+		self::$mApprovedFileInfo[$file_title] = array( $timestamp, $sha1 );
+
+		$log = new LogPage( 'approval' );
+				
+		$imagepage = ImagePage::newFromID( $title->getArticleID() );
+		$display_file_url = $imagepage->getDisplayedFile()->getFullURL();
+		// $url = $title->getDisplayedFile()->getFullURL(); // link to the imagepage, or directly to the approved file?
 		
+		// $url = $file_obj->getFullURL();
+		$rev_link = Xml::element(
+			'a',
+			array( 'href' => $display_file_url, 'title' => 'unique identifier: ' . $sha1 ),
+			substr($sha1, 0, 6) // show first 6 characters of sha1
+		);
+		$logParams = array( $rev_link );
+		$log->addEntry(
+			'approve',
+			$title,
+			'',
+			$logParams
+		);
+
+		// Run this hook like for 'approve', create new hook, or do nothing?
+		// wfRunHooks( 'ApprovedRevsRevisionApproved', array( $parser, $title, $rev_id ) );
+
+	}
+
+	public static function UnsetApprovedFileInDB ( $title ) {
+		
+		$file_title = $title->getDBkey();
+		
+		$dbr = wfGetDB( DB_MASTER );
+		$page_id = $title->getArticleID();
+		$dbr->delete( 'approved_revs_files', array( 'file_title' => $file_title ) );
+
+		// the unapprove page method had LinksUpdate and Parser objects here, but the page text has
+		// not changed at all with a file approval, so I don't think those are necessary.
+
+		$log = new LogPage( 'approval' );
+		$log->addEntry(
+			'unapprove',
+			$title,
+			''
+		);
+
+		// Run this hook like for 'unapprove', create new hook, or do nothing?
+		// wfRunHooks( 'ApprovedRevsRevisionUnapproved', array( $parser, $title ) );
+
+	}
+
+
+	/**
+	 *  Pulls from DB table approved_revs_files which revision of a file, if any
+	 *  besides most recent, should be used as the approved revision.
+	 **/
+	public static function GetApprovedFileInfo ( $file_title ) {
+
+		if ( isset(self::$mApprovedFileInfo[ $file_title->getDBkey() ]) )
+			return self::$mApprovedFileInfo[ $file_title->getDBkey() ];
+	
+		$dbr = wfGetDB( DB_SLAVE );
+		$row = $dbr->selectRow(
+			'approved_revs_files', // select from table
+			array('approved_timestamp', 'approved_sha1'), 
+			array( 'file_title' => $file_title->getDBkey() )
+		);
+		if ( $row )
+			$return = array( $row->approved_timestamp, $row->approved_sha1 );
+		else
+			$return = array( false, false );
+
+		self::$mApprovedFileInfo[ $file_title->getDBkey() ] = $return;
+		return $return;
+		
+	}
+	
 }

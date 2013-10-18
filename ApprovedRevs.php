@@ -75,6 +75,15 @@ $wgHooks['sfHTMLBeforeForm'][] = 'ApprovedRevsHooks::addWarningToSFForm';
 $wgHooks['ArticleViewHeader'][] = 'ApprovedRevsHooks::setArticleHeader';
 $wgHooks['ArticleViewHeader'][] = 'ApprovedRevsHooks::displayNotApprovedHeader';
 
+// Approved File Revisions
+$wgHooks['UnknownAction'][] = 'ApprovedRevsHooks::setFileAsApproved';
+$wgHooks['UnknownAction'][] = 'ApprovedRevsHooks::unsetFileAsApproved';
+$wgHooks['ImagePageFileHistoryLine'][] = 'ApprovedRevsHooks::onImagePageFileHistoryLine';
+$wgHooks['BeforeParserFetchFileAndTitle'][] = 'ApprovedRevsHooks::ModifyFileLinks';
+$wgHooks['ImagePageFindFile'][] = 'ApprovedRevsHooks::onImagePageFindFile';
+
+
+
 // logging
 $wgLogTypes['approval'] = 'approval';
 $wgLogNames['approval'] = 'approvedrevs-logname';

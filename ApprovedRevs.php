@@ -11,7 +11,7 @@ if ( !defined( 'MEDIAWIKI' ) ) die();
 
 // Jamesmontalvo3 recommending bumping this to at least 0.7.0 since it's a major change to 
 // the way permissions and "approvability" are implemented
-define( 'APPROVED_REVS_VERSION', '0.7.0' );
+define( 'APPROVED_REVS_VERSION', '0.7.1' );
 
 // credits
 $wgExtensionCredits['other'][] = array(

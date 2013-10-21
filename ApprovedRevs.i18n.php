@@ -90,6 +90,7 @@ Instead, a blank page will be shown.',
 	'approvedrevs-viewlatestrev' => 'View the most recent revision.',
 	'right-approverevisions' => 'Set a certain revision of a wiki page as approved',
 	'right-viewlinktolatest' => 'View explanatory text at the top of pages that have an approved revision',
+	'approvedrevs-historylabel' => '&#9733; Approved Revision',
 );
 
 /** Message documentation (Message documentation)

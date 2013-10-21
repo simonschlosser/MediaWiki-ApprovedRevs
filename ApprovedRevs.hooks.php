@@ -12,6 +12,7 @@
  */
 class ApprovedRevsHooks {
 
+	static $debugCount = 0;
 	static $mNoSaveOccurring = false;
 
 	static public function userRevsApprovedAutomatically( $title ) {
@@ -425,7 +426,7 @@ class ApprovedRevsHooks {
 				$classes[] = "approved-revision";
 			else
 				$classes = array("approved-revision");
-			$s = '&#9733; Approved Revision<br />' . $s;
+			$s = wfMsg( 'approvedrevs-historylabel' ) . '<br />' .  $s;
 		}
 		if ( ApprovedRevs::userCanApprove( $title ) ) {
 			if ( $row->rev_id == $approvedRevID ) {
@@ -752,6 +753,10 @@ class ApprovedRevsHooks {
 			if ( $rowClass )
 				$rowClass .= ' ';
 			$rowClass .= "approved-revision";
+			
+			$pattern = "/<td[^>]+filehistory-selected+[^>]+>/";
+			$replace = "$0" . wfMsg( 'approvedrevs-historylabel' ) . "<br />";
+			$s = preg_replace($pattern, $replace, $s);
 		}
 		
 		if ( ApprovedRevs::userCanApprove( $file_title ) ) {
@@ -786,8 +791,22 @@ class ApprovedRevsHooks {
 	 **/
 	public static function ModifyFileLinks ( $parser, Title $file_title, &$options, &$query ) {
 
+		self::$debugCount++;
 		if ( $file_title->getNamespace() == NS_MEDIA ) {
 			$file_title = Title::makeTitle( NS_FILE, $file_title->getDBkey() );
+			$file_title->resetArticleId( $file_title->getArticleID() ); // avoid extra queries
+			
+			// Media link redirects don't get caught by the normal redirect check, so this
+			// extra check is required
+			if ( $temp = WikiPage::newFromID($file_title->getArticleID())->getRedirectTarget() ) {
+				$file_title = $temp;
+				unset($temp);
+			}
+		}
+		
+		if ( $file_title->isRedirect() ) {
+			$page = WikiPage::newFromID( $file_title->getArticleID() );
+			$file_title = $page->getRedirectTarget();
 			$file_title->resetArticleId( $file_title->getArticleID() ); // avoid extra queries
 		}
 
@@ -795,8 +814,9 @@ class ApprovedRevsHooks {
 		list( $approvedRev_ts, $approvedRev_sha1 ) = ApprovedRevs::GetApprovedFileInfo( $file_title );
 		
 		// no valid approved timestamp or sha1, so don't modify image or image link
-		if ( (! $approvedRev_ts) || (! $approvedRev_sha1) )
+		if ( (! $approvedRev_ts) || (! $approvedRev_sha1) ) {
 			return true;
+		}
 		
 		$options['time'] = wfTimestampOrNull( TS_MW, $approvedRev_ts );
 		$options['sha1'] = $approvedRev_sha1;

@@ -109,18 +109,35 @@ class ApprovedRevs {
 	 * approvable. Also stores the boolean answer as a field in the page
 	 * object, to speed up processing if it's called more than once.
 	 */
-	public static function pageIsApprovable( Title $title ) {
+	public static function pageIsApprovable( Title $title, $is_media=false ) {
 		// if this function was already called for this page, the
 		// value should have been stored as a field in the $title object
-		if ( isset( $title->isApprovable ) ) {
+		if ( isset( $title->isApprovable ) && ! $is_media ) { // media needs to bypass this...else isApprovable=false set by File: page
 			return $title->isApprovable;
 		}
 
 		if ( !$title->exists() ) {
-			$title->isApprovable = false;
-			return $title->isApprovable;			
+			return $title->isApprovable = false;			
 		}
 
+		// if a page already has an approval, it must be approvable in order to be able to view/modify approvals
+		if ( $is_media ) {
+			list($ts,$sha1) = self::GetApprovedFileInfo( $title ); // if title in approved_revs_files table
+			if ($ts !== false)
+				return $title->isApprovable = true;
+		}
+		else {
+			// if title in approved_revs table
+			
+			// FIXME: How to handle this since self::getApprovedRevID() calls this function
+			// so we can't use it here to determine if $title already has an approved rev
+			// without creating a circular reference
+		}
+		
+		// File pages NOT approvable. Files approvable via the NS_MEDIA namespace
+		if ( $title->getNamespace() == NS_FILE && ! $is_media ) {
+			return $title->isApprovable = false;
+		}
 
 		// Jamesmontalvo3 suggesting removal of this. approved rev namespaces no handled in
 		// approvedrevs-permissions
@@ -167,6 +184,10 @@ class ApprovedRevs {
 		$title->isApprovable = $isApprovable;
 		return $isApprovable;
 	}
+	
+	public static function mediaIsApprovable ( Title $title ) {
+		return self::pageIsApprovable( $title, true ); // use pageIsApprovable() with files allowed
+	}
 
 	public static function userCanApprove ( $title ) {
 
@@ -207,6 +228,10 @@ class ApprovedRevs {
 			if ($pg == $page_actual)
 				self::checkIfUserInPerms( $perms, $inclusive );
 		}
+		
+		if ( self::usernameIsBasePageName() )
+			self::$mUserCanApprove = true;
+
 		
 		return self::$mUserCanApprove;
 	}
@@ -385,10 +410,10 @@ class ApprovedRevs {
 					if ( in_array( strtolower(trim($perm[1])), $userGroups ) )
 						return self::$mUserCanApprove = true;
 					break;
-				case "self":
-					if ( self::usernameIsBasePageName() )
-						return self::$mUserCanApprove = true;
-					break;
+				// case "self":
+					// if ( self::usernameIsBasePageName() )
+						// return self::$mUserCanApprove = true;
+					// break;
 				case "creator":
 					if ( self::isPageCreator() )
 						return self::$mUserCanApprove = true;
@@ -397,16 +422,25 @@ class ApprovedRevs {
 					if ( self::smwPropertyEqualsCurrentUser( $perm[1] ) )
 						return self::$mUserCanApprove = true;
 					break;
+				case "": // skip lines w/o perms
+					break;
 				default:
-					echo "Error in checkIfUserInPerms()"; // had this die() before, but it killed it when I tweaked the approvedrevs-permissions page
+					// was "die()", but it broke when I tweaked the approvedrevs-permissions page
+					// FIXME: should throw MW exception
+					echo "Error in checkIfUserInPerms()";
 			}
 		}
+		
+		// if ( self::usernameIsBasePageName() )
+			// return self::$mUserCanApprove = true;
 		
 		// if $inclusive==true, the fact that this call to checkIfUserInPerms() didn't find a match does
 		// not mean that that the user is denied. Instead return the unmodified value of  
 		// self::$mUserCanApprove, which could be either true or false depending on previous passes
 		// through checkIfUserInPerms()
 		if ($inclusive)
+			// FIXME: isn't this unnecessary? Will always return false? If was true and $inclusive
+			// wouldn't it have been caught at beginning of function?
 			return self::$mUserCanApprove;
 
 		// if $inclusive==false, the previous value of $mUserCanApprove is irrelevant. return false 
@@ -440,13 +474,18 @@ class ApprovedRevs {
 	public static function usernameIsBasePageName () {
 		global $wgUser, $wgTitle;
 
-		// explode on slash to just get the first part (if it is a subpage)
-		// as far as I know usernames cannot have slashes in them, so this should be okay
-		$title_parts = explode('/', $wgTitle->getText()); // no array dereference in PHP < 5.4 :-(
+		if ($wgTitle->getNamespace() == NS_USER || $wgTitle->getNamespace() == NS_USER_TALK) {
 		
-		// sticking with case-sensitive here. So username "James Montalvo" won't have "Self" rights
-		// on page "James montalvo". I think that's the right move
-		return $title_parts[0] == $wgUser->getName();
+			// explode on slash to just get the first part (if it is a subpage)
+			// as far as I know usernames cannot have slashes in them, so this should be okay
+			$title_parts = explode('/', $wgTitle->getText()); // no array dereference in PHP < 5.4 :-(
+			
+			// sticking with case-sensitive here. So username "James Montalvo" won't have "Self" rights
+			// on page "User:James montalvo". I think that's the right move
+			return $title_parts[0] == $wgUser->getName();
+		
+		}
+		return false;
 	}
 
 	public static function getNamespaceName ( $title ) {

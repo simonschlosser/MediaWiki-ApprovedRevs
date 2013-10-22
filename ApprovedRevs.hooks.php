@@ -737,7 +737,7 @@ class ApprovedRevsHooks {
 
 		$file_title = $file->getTitle();
 
-		if ( ! ApprovedRevs::pageIsApprovable( $file_title ) ) { // FIXME: pageIsApprovable needs to return true if approved rev exists
+		if ( ! ApprovedRevs::mediaIsApprovable( $file_title ) ) { // FIXME: pageIsApprovable needs to return true if approved rev exists
 			return true;
 		}
 		
@@ -876,7 +876,7 @@ class ApprovedRevsHooks {
 			return true;
 		}
 		$title = $article->getTitle();
-		if ( ! ApprovedRevs::pageIsApprovable( $title ) ) {
+		if ( ! ApprovedRevs::mediaIsApprovable( $title ) ) {
 			return true;
 		}
 		if ( ! ApprovedRevs::userCanApprove( $title ) ) {

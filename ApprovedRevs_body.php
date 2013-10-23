@@ -33,10 +33,15 @@ class ApprovedRevs {
 			return null;
 		}
 
+		return self::getApprovedRevIDfromDB( $pageID );
+	}
+
+	public static function getApprovedRevIDfromDB ( $pageID ) {
+
 		$dbr = wfGetDB( DB_SLAVE );
 		$revID = $dbr->selectField( 'approved_revs', 'rev_id', array( 'page_id' => $pageID ) );
-		self::$mApprovedRevIDForPage[$pageID] = $revID;
-		return $revID;
+		return self::$mApprovedRevIDForPage[$pageID] = $revID;
+
 	}
 
 	/**
@@ -120,37 +125,13 @@ class ApprovedRevs {
 			return $title->isApprovable = false;			
 		}
 
-		// if a page already has an approval, it must be approvable in order to be able to view/modify approvals
-		if ( $is_media ) {
-			list($ts,$sha1) = self::GetApprovedFileInfo( $title ); // if title in approved_revs_files table
-			if ($ts !== false)
-				return $title->isApprovable = true;
-		}
-		else {
-			// if title in approved_revs table
-			
-			// FIXME: How to handle this since self::getApprovedRevID() calls this function
-			// so we can't use it here to determine if $title already has an approved rev
-			// without creating a circular reference
-		}
 		
-		// File pages NOT approvable. Files approvable via the NS_MEDIA namespace
+		// File pages NOT approvable, but the uploaded files themselves are
 		if ( $title->getNamespace() == NS_FILE && ! $is_media ) {
 			return $title->isApprovable = false;
 		}
 
-		// Jamesmontalvo3 suggesting removal of this. approved rev namespaces no handled in
-		// approvedrevs-permissions
-		
-		// check the namespace
-		// global $egApprovedRevsNamespaces;
-		// if ( in_array( $title->getNamespace(), $egApprovedRevsNamespaces ) ) {
-			// $title->isApprovable = true;
-			// return $title->isApprovable;
-		// }
-
 		$perms = self::getPermissions();
-
 		if ( in_array( self::getNamespaceName( $title ), $perms['Namespaces'] ) )
 			return $title->isApprovable = true;
 		if ( count( array_intersect( self::getCategoryList( $title ), $perms['Categories'] ) ) > 0 )
@@ -159,13 +140,14 @@ class ApprovedRevs {
 			return $title->isApprovable = true;
 		
 
-		
 		// Jamesmontalvo3 question/discussion:
 		// Regarding below: not sure if we should keep this. It seems cleaner to say you can add 
 		// the approval-requirement on a case-by-case basis via the approvedrevs-permissions page
 		// than to allow any user to throw __APPROVEDREVS__ onto a page. Also, with the new 
 		// implementation only people with "All Pages" permissions (probably just sysops in most 
-		// cases) will be able to approve this. 
+		// cases) will be able to approve this. Rather than adding __APPROVEDREVS__ instead add
+		// [[Category:Pages with Approved Revisions]] (or similar category) which can more finely 
+		// limit who can have permissions
 
 		// it's not in an included namespace, so check for the page
 		// property - for some reason, calling the standard
@@ -180,9 +162,33 @@ class ApprovedRevs {
 			)
 		);
 		$row = $dbr->fetchRow( $res );
-		$isApprovable = ( $row[0] == '1' );
-		$title->isApprovable = $isApprovable;
-		return $isApprovable;
+		return $title->isApprovable = ( $row[0] == '1' );
+		// if ( $row[0] == '1' ) // FIXME: use this if-statement if doing the method below
+		// 	return $title->isApprovable = true;
+		
+
+		/*
+		Jamesmontalvo3: cannot decide whether I want this
+
+		// if a page already has an approval, it must be approvable in order to be able to 
+		// view/modify approvals. Though this wasn't the case on previous versions of ApprovedRevs,
+		// it is necessary now since which pages can be approved can change much more easily
+		if ( $is_media ) {
+			list($ts,$sha1) = self::GetApprovedFileInfo( $title ); // if title in approved_revs_files table
+			if ($ts !== false) {
+				// only approvable because it already has an approved rev, not because it is in 
+				// message "approvedrev-permissions" 
+				$title->isApprovableByHistoryOnly = true;
+				return $title->isApprovable = true;
+			}
+		}
+		// if title in approved_revs table
+		else if ( self::getApprovedRevIDfromDB( $title->getArticleID() ) ) {
+			$title->isApprovableByHistoryOnly = true;
+			return $title->isApprovable = true;
+		}
+		*/
+
 	}
 	
 	public static function mediaIsApprovable ( Title $title ) {

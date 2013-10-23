@@ -416,10 +416,6 @@ class ApprovedRevs {
 					if ( in_array( strtolower(trim($perm[1])), $userGroups ) )
 						return self::$mUserCanApprove = true;
 					break;
-				// case "self":
-					// if ( self::usernameIsBasePageName() )
-						// return self::$mUserCanApprove = true;
-					// break;
 				case "creator":
 					if ( self::isPageCreator() )
 						return self::$mUserCanApprove = true;
@@ -428,18 +424,14 @@ class ApprovedRevs {
 					if ( self::smwPropertyEqualsCurrentUser( $perm[1] ) )
 						return self::$mUserCanApprove = true;
 					break;
-				case "": // skip lines w/o perms
+				case "": // skip lines w/o perms (i.e. lines like "Main = ")
 					break;
 				default:
-					// was "die()", but it broke when I tweaked the approvedrevs-permissions page
-					// FIXME: should throw MW exception
-					echo "Error in checkIfUserInPerms()";
+					throw new MWException(__METHOD__ 
+						. '(): invalid permissions type');
 			}
 		}
-		
-		// if ( self::usernameIsBasePageName() )
-			// return self::$mUserCanApprove = true;
-		
+				
 		// if $inclusive==true, the fact that this call to checkIfUserInPerms() didn't find a match does
 		// not mean that that the user is denied. Instead return the unmodified value of  
 		// self::$mUserCanApprove, which could be either true or false depending on previous passes
@@ -592,7 +584,6 @@ class ApprovedRevs {
 		$file_title = $title->getDBkey();
 		
 		$dbr = wfGetDB( DB_MASTER );
-		$page_id = $title->getArticleID();
 		$dbr->delete( 'approved_revs_files', array( 'file_title' => $file_title ) );
 		// the unapprove page method had LinksUpdate and Parser objects here, but the page text has
 		// not changed at all with a file approval, so I don't think those are necessary.
@@ -608,7 +599,6 @@ class ApprovedRevs {
 		// wfRunHooks( 'ApprovedRevsRevisionUnapproved', array( $parser, $title ) );
 
 	}
-
 
 	/**
 	 *  Pulls from DB table approved_revs_files which revision of a file, if any

@@ -749,7 +749,11 @@ class ApprovedRevsHooks {
 		ApprovedRevs::addCSS();
 
 		// apply class to row of approved revision
-		if ( $row_sha1 == $approvedRev_sha1 ) {
+		// Note: both here and below in the "userCanApprove" section, if the timestamp condition is
+		// removed then all rows with the same sha1 as the approved rev will be given the class
+		// "approved-revision", and highlighted. Only the actual approved rev will be given the 
+		// message approvedrevs-historylabel, though. 
+		if ( $row_sha1 == $approvedRev_sha1 && $row_timestamp == $approvedRev_ts ) {
 			if ( $rowClass )
 				$rowClass .= ' ';
 			$rowClass .= "approved-revision";
@@ -760,7 +764,7 @@ class ApprovedRevsHooks {
 		}
 		
 		if ( ApprovedRevs::userCanApprove( $file_title ) ) {
-			if ( $row_sha1 == $approvedRev_sha1 ) {
+			if ( $row_sha1 == $approvedRev_sha1 && $row_timestamp == $approvedRev_ts ) {
 				$url = $file_title->getLocalUrl(
 					array( 'action' => 'unapprovefile' )
 				);
@@ -837,7 +841,12 @@ class ApprovedRevsHooks {
 	 *  from the most recent to the approved revision.
 	 **/
 	public static function onImagePageFindFile ( $imagePage, &$normalFile, &$displayFile ) {
-
+		
+		// if ($normalFile)
+			// $normalFile->purgeCache();
+		// if ($displayFile)
+			// $displayFile->purgeCache();
+	
 		list( $approvedRev_ts, $approvedRev_sha1 ) = ApprovedRevs::GetApprovedFileInfo( $imagePage->getFile()->getTitle() );
 		if ( (! $approvedRev_ts) || (! $approvedRev_sha1) )
 			return true;
@@ -963,11 +972,44 @@ class ApprovedRevsHooks {
 	 *  FIXME: Create ApprovedRevs::UnsetApprovedFileBySha1 or something like that
 	 *     Compare UnsetApprovedFileInDB() and UnsetApprovedFile()
 	 **/
-	// public static function onFileDeleteComplete ( File $file, $oldimage, $article, $user, $reason ) {
+	public static function onFileDeleteComplete ( File $file, $oldimage, $article, $user, $reason ) {
+	
+		$dbr = wfGetDB( DB_SLAVE );
+		// check if this file has an approved revision
+		$approved_file = $dbr->selectRow(
+			'approved_revs_files',
+			array('approved_timestamp','approved_sha1'),
+			array( 'file_title' => $file->getTitle()->getDBkey() )
+		);
+		
+		// If an approved revision exists, loop through all files in history.
+		// Since this hook happens AFTER deletion (there is no hook before deletion), check to see
+		// if the sha1 of the approved revision is NOT in the history. If it is not in the history,
+		// then it has no business being in the approved_revs_files table, and should be deleted.
+		if ( $approved_file ) {
+			
+			$revs = array();
+			$approved_exists = false;
+			
+			$hist = $file->getHistory();
+			foreach($hist as $OldLocalFile) {
+				// need to check both sha1 and timestamp, since reverted files can have the same
+				// sha1, but different timestamps
+				if ( $OldLocalFile->getTimestamp() == $approved_file->approved_timestamp
+					&& $OldLocalFile->getSha1() == $approved_file->approved_sha1 )
+				{
+					$approved_exists = true;
+				}
+				
+			}
 
-	// 	ApprovedRevs::UnsetApprovedFileInDB( $file->getTitle() );
-
-	// }
+			if ( ! $approved_exists )
+				ApprovedRevs::UnsetApprovedFileInDB( $file->getTitle() );
+			
+		}
+		
+		return true;
+	}
 
 	
 	/*NOT SURE IF THIS IS NECESSARY FOR ANYTHING...

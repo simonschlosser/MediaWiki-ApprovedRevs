@@ -953,6 +953,21 @@ class ApprovedRevsHooks {
 		return false;
 	}
 
+	/**
+	 *	If a file is deleted, check if the sha1 (and timestamp?) exist in the 
+	 *  approved_revs_files table, and delete that row accordingly. A deleted
+	 *  version of a file should not be the approved version!
+	 *
+	 *	FIXME: The code below is wrong. Do what it says above.
+	 *  FIXME: The hook for this file has not been added to ApprovedRevs.php
+	 *  FIXME: Create ApprovedRevs::UnsetApprovedFileBySha1 or something like that
+	 *     Compare UnsetApprovedFileInDB() and UnsetApprovedFile()
+	 **/
+	// public static function onFileDeleteComplete ( File $file, $oldimage, $article, $user, $reason ) {
+
+	// 	ApprovedRevs::UnsetApprovedFileInDB( $file->getTitle() );
+
+	// }
 
 	
 	/*NOT SURE IF THIS IS NECESSARY FOR ANYTHING...

@@ -594,7 +594,6 @@ class ApprovedRevs {
 		$dbr = wfGetDB( DB_MASTER );
 		$page_id = $title->getArticleID();
 		$dbr->delete( 'approved_revs_files', array( 'file_title' => $file_title ) );
-
 		// the unapprove page method had LinksUpdate and Parser objects here, but the page text has
 		// not changed at all with a file approval, so I don't think those are necessary.
 

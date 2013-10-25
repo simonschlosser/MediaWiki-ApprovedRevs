@@ -147,19 +147,24 @@ class SpecialApprovedRevsPage extends QueryPage {
 		// $asd = Category::newFromName( );
 		// $cat = $asd->getName();
 
+		$tables = array(
+			'ar' => 'approved_revs',
+			'p' => 'page',
+			'pp' => 'page_props',
+			// 'c' => 'categorylinks', OR 'category', ...which is it?
+		);
+
+		$fields = array(
+			'p.page_id AS id', // required for all all
+			'ar.rev_id AS rev_id', // not required for "unapproved", but won't hurt anything
+			'p.page_latest AS latest_id', // required for all
+			// 'c.??? as ???',
+		);
 
 		if ( $this->mMode == 'notlatest' ) {
 			return array(
-				'tables' => array(
-					'ar' => 'approved_revs',
-					'p' => 'page',
-					'pp' => 'page_props',
-				),
-				'fields' => array(
-					'p.page_id AS id',
-					'ar.rev_id AS rev_id',
-					'p.page_latest AS latest_id',
-				),
+				'tables' => $tables,
+				'fields' => $fields,
 				'join_conds' => array(
 					'p' => array(
 						'JOIN', 'ar.page_id=p.page_id'
@@ -172,15 +177,8 @@ class SpecialApprovedRevsPage extends QueryPage {
 			);
 		} elseif ( $this->mMode == 'unapproved' ) {
 			return array(
-				'tables' => array(
-					'ar' => 'approved_revs',
-					'p' => 'page',
-					'pp' => 'page_props',
-				),
-				'fields' => array(
-					'p.page_id AS id',
-					'p.page_latest AS latest_id'
-				),
+				'tables' => $tables,
+				'fields' => $fields,
 				'join_conds' => array(
 					'p' => array(
 						'RIGHT OUTER JOIN', 'ar.page_id=p.page_id'
@@ -193,16 +191,8 @@ class SpecialApprovedRevsPage extends QueryPage {
 			);
 		} else { // all approved pages
 			return array(
-				'tables' => array(
-					'ar' => 'approved_revs',
-					'p' => 'page',
-					'pp' => 'page_props',
-				),
-				'fields' => array(
-					'p.page_id AS id',
-					'ar.rev_id AS rev_id',
-					'p.page_latest AS latest_id',
-				),
+				'tables' => $tables,
+				'fields' => $fields,
 				'join_conds' => array(
 					'p' => array(
 						'JOIN', 'ar.page_id=p.page_id',

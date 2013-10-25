@@ -132,7 +132,22 @@ class SpecialApprovedRevsPage extends QueryPage {
 	function getQueryInfo() {
 		global $egApprovedRevsNamespaces;
 
-		$namespacesString = '(' . implode( ',', $egApprovedRevsNamespaces ) . ')';
+		$perms = ApprovedRevs::getPermissions();
+		$perms['NamespaceIDs'] = array();
+
+		foreach($perms['Namespaces'] as $ns) {
+			if ( strtolower($ns) == 'main' )
+				$ns = '';
+			$perms['NamespaceIDs'][] = MWNamespace::getCanonicalIndex( strtolower($ns) );
+		}
+
+		// $namespacesString = '(' . implode( ',', $egApprovedRevsNamespaces ) . ')';
+		$namespacesString = '(' . implode(',', $perms['NamespaceIDs']) . ')';
+
+		// $asd = Category::newFromName( );
+		// $cat = $asd->getName();
+
+
 		if ( $this->mMode == 'notlatest' ) {
 			return array(
 				'tables' => array(

@@ -355,7 +355,6 @@ class ApprovedRevs {
 	 *  All methods below are totally new from jamesmontalvo3
 	 **/
 		
-		
 	// pull INI-file content from approvedrevs-permissions
 	public static function getPermissions () {
 
@@ -634,5 +633,5 @@ class ApprovedRevs {
 		return $return;
 		
 	}
-	
+
 }

@@ -81,7 +81,7 @@ $wgHooks['UnknownAction'][] = 'ApprovedRevsHooks::unsetFileAsApproved';
 $wgHooks['ImagePageFileHistoryLine'][] = 'ApprovedRevsHooks::onImagePageFileHistoryLine';
 $wgHooks['BeforeParserFetchFileAndTitle'][] = 'ApprovedRevsHooks::ModifyFileLinks';
 $wgHooks['ImagePageFindFile'][] = 'ApprovedRevsHooks::onImagePageFindFile';
-
+$wgHooks['FileDeleteComplete'][] = 'ApprovedRevsHooks::onFileDeleteComplete';
 
 
 // logging

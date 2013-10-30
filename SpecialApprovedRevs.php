@@ -141,8 +141,18 @@ class SpecialApprovedRevsPage extends QueryPage {
 			$perms['NamespaceIDs'][] = MWNamespace::getCanonicalIndex( strtolower($ns) );
 		}
 
+		// using array of categories from $perms, create array of category
+		// names in the same form as categorylinks.cl_to
+		$perms['CategoryColumns'] = array();
+		foreach($perms['Categories'] as $cat) {
+			$perms['CategoryColumns'][] = someNormalizingFunction( $cat );
+		}
+
+
 		// $namespacesString = '(' . implode( ',', $egApprovedRevsNamespaces ) . ')';
 		$namespacesString = '(' . implode(',', $perms['NamespaceIDs']) . ')';
+
+		$categoryString = '(' . implode(','  . ')';
 
 		// $asd = Category::newFromName( );
 		// $cat = $asd->getName();

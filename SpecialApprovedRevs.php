@@ -171,7 +171,11 @@ class SpecialApprovedRevsPage extends QueryPage {
 				'LEFT OUTER JOIN', 'ar.page_id=pp_page'
 			),
 		);
-				
+		
+		$bannedNS = '(p.page_namespace NOT IN (' 
+			. implode( ',' , ApprovedRevs::getBannedNamespaceIDs() )
+			. '))';
+
 				
 		#
 		#	NOTLATEST
@@ -184,7 +188,7 @@ class SpecialApprovedRevsPage extends QueryPage {
 			// $tables['c'] = 'categorylinks';
 			// $join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
 			// $conds = "p.page_latest != ar.rev_id AND ($conds)";  
-			$conds = "p.page_latest != ar.rev_id"; // gets everything in the approved_revs table that is not latest rev
+			$conds = "p.page_latest != ar.rev_id AND $bannedNS"; // gets everything in the approved_revs table that is not latest rev
 		
 		
 		#
@@ -195,13 +199,13 @@ class SpecialApprovedRevsPage extends QueryPage {
 			$tables['c'] = 'categorylinks';
 			$join_conds['p'] = array( 'RIGHT OUTER JOIN', 'ar.page_id=p.page_id' );	// override	
 			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
-
+			
 			list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();
 			$conds  = ($ns === false)  ? '' : "(p.page_namespace IN ($ns)) OR ";
 			$conds .= ($cat === false) ? '' : "(c.cl_to IN ($cat)) OR ";
 			$conds .= ($pg === false)  ? '' : "(p.page_id IN ($pg)) OR ";
 			$conds .= "(pp_propname = 'approvedrevs' AND pp_value = 'y')";
-			$conds  = "ar.page_id IS NULL AND ($conds)";		
+			$conds  = "ar.page_id IS NULL AND ($conds) AND $bannedNS";		
 
 			
 		#
@@ -209,7 +213,7 @@ class SpecialApprovedRevsPage extends QueryPage {
 		#
 		} else { 
 
-			$conds = null; // get everything from approved_revs table
+			$conds = $bannedNS; // get everything from approved_revs table
 			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
 		}
 

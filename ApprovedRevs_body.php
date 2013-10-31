@@ -18,6 +18,10 @@ class ApprovedRevs {
 	static $permissions = null;
 	static $mUserGroups = null;
 	static $james_test = null; // because jamesmontalvo3 doesn't know a better way to test things...
+	static $banned_NS_names = array(
+		"File", "MediaWiki"
+	);
+	static $banned_NS_IDs = false; // requires initialization
 	
 	/**
 	 * Gets the approved revision ID for this page, or null if there isn't
@@ -43,6 +47,7 @@ class ApprovedRevs {
 		return self::$mApprovedRevIDForPage[$pageID] = $revID;
 
 	}
+
 
 	/**
 	 * Returns whether or not this page has a revision ID.
@@ -521,6 +526,25 @@ class ApprovedRevs {
 		}
 		return false;
 	}
+	
+	public static function getNamespaceIDfromName ( $nsName ) {
+		if ($nsName == "Main")
+			$nsName = "";
+			
+		$page_ns = MWNamespace::getCanonicalNamespaces();
+		foreach($page_ns as $id => $name) {
+			if ($nsName == $name)
+				return $id;
+		}
+		return false; // invalid name, nonexistant namespace
+		
+		
+		$page_ns = $page_ns[ $nsName ]; // NS text
+		if ($page_ns == "")
+			$page_ns = "Main";
+		return $page_ns;
+
+	}
 
 	public static function getNamespaceName ( $title ) {
 
@@ -687,31 +711,25 @@ class ApprovedRevs {
 			$pgIDs[] = $title->getArticleID();
 		}
 		
-
-		// if ( count($nsIDs) > 0 ) {
-			// $ns = ;
-		// } else {
-			// $ns = false;
-		// }
-		
-		// if ( count($catCols) > 0 ) {
-			// $cat = implode(',', $catCols); 
-		// } else {
-			// $cat = false;
-		// }
-		
-		// if ( count($pgIDs) ) {
-			// $pg = implode(',', $pgIDs);
-		// } else {
-			// $pg = false;
-		// }
-		
 		return array( 
 			count($nsIDs) > 0   ? implode(',', $nsIDs)   : false,
 			count($catCols) > 0 ? implode(',', $catCols) : false,
 			count($nsIDs) > 0   ? implode(',', $nsIDs)   : false,
 		);
 		
+	}
+	
+	public static function getBannedNamespaceIDs () {
+		
+		if ( self::$banned_NS_IDs !== false )
+			return self::$banned_NS_IDs;
+		
+		self::$banned_NS_IDs = array();
+		foreach(self::$banned_NS_names as $ns_name) {
+			self::$banned_NS_IDs[] = self::getNamespaceIDfromName($ns_name);
+		}
+		
+		return self::$banned_NS_IDs;
 	}
 	
 }

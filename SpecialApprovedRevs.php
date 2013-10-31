@@ -145,32 +145,49 @@ class SpecialApprovedRevsPage extends QueryPage {
 		// names in the same form as categorylinks.cl_to
 		$perms['CategoryColumns'] = array();
 		foreach($perms['Categories'] as $cat) {
-			$perms['CategoryColumns'][] = someNormalizingFunction( $cat );
+			$catObj = Category::newFromName( $cat );
+			$perms['CategoryColumns'][] = "'" . mysql_real_escape_string($catObj->getName()) . "'";
 		}
 
+		$perms['PageIDs'] = array();
+		foreach($perms['Pages'] as $pg) {
+			$title = Title::newFromText( $pg );
+			$perms['PageIDs'][] = $title->getArticleID();
+		}
+		
 
 		// $namespacesString = '(' . implode( ',', $egApprovedRevsNamespaces ) . ')';
-		$namespacesString = '(' . implode(',', $perms['NamespaceIDs']) . ')';
+		if ( count($perms['NamespaceIDs']) > 0 )
+			$namespacesString = '(p.page_namespace IN (' . implode(',', $perms['NamespaceIDs']) . ')) OR ';
+		else
+			$namespacesString = '';
+		
+		
+		if ( count($perms['CategoryColumns']) > 0 )
+			$categoryString = '(c.cl_to IN (' . implode(',', $perms['CategoryColumns']) . ')) OR '; 
+		else
+			$categoryString = '';
 
-		$categoryString = '(' . implode(','  . ')';
-
-		// $asd = Category::newFromName( );
-		// $cat = $asd->getName();
-
+		
+		if ( count($perms['PageIDs']) )
+			$pagesString = '(p.page_id IN (' . implode(',', $perms['PageIDs']) . ')) OR ';
+		else
+			$pagesString = '';
+		
 		$tables = array(
 			'ar' => 'approved_revs',
 			'p' => 'page',
 			'pp' => 'page_props',
-			// 'c' => 'categorylinks', OR 'category', ...which is it?
 		);
 
 		$fields = array(
 			'p.page_id AS id', // required for all all
 			'ar.rev_id AS rev_id', // not required for "unapproved", but won't hurt anything
 			'p.page_latest AS latest_id', // required for all
-			// 'c.??? as ???',
 		);
 
+		$conds = "$namespacesString $categoryString $pagesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
+		
 		if ( $this->mMode == 'notlatest' ) {
 			$join_conds = array(
 				'p' => array(
@@ -180,7 +197,15 @@ class SpecialApprovedRevsPage extends QueryPage {
 					'LEFT OUTER JOIN', 'ar.page_id=pp_page'
 				),
 			);
-			$conds = "p.page_latest != ar.rev_id AND ((p.page_namespace IN $namespacesString) OR (pp_propname = 'approvedrevs' AND pp_value = 'y'))";
+			// gets pages in approved_revs table that 
+			//   (a) are not the latest rev
+			//   (b) satisfy MediaWiki:approvedrevs-permissions
+			// $tables['c'] = 'categorylinks';
+			// $join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
+			// $conds = "p.page_latest != ar.rev_id AND ($conds)";  
+			$conds = "p.page_latest != ar.rev_id"; // gets everything in the approved_revs table that is not latest rev
+		
+		
 		} elseif ( $this->mMode == 'unapproved' ) {
 			$join_conds = array(
 				'p' => array(
@@ -190,7 +215,34 @@ class SpecialApprovedRevsPage extends QueryPage {
 					'LEFT OUTER JOIN', 'ar.page_id=pp_page'
 				),
 			);
-			$conds = "ar.page_id IS NULL AND ((p.page_namespace IN $namespacesString) OR (pp_propname = 'approvedrevs' AND pp_value = 'y'))";
+			
+			$tables['c'] = 'categorylinks';
+			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
+
+
+			$conds = "ar.page_id IS NULL AND ($conds)";
+		
+		
+		} elseif ( $this->mMode == 'grandfathered' ) {
+			#######################
+			#                     #
+			#  THIS DOESN'T WORK  #
+			#     IT'S BROKEN     #
+			#                     #
+			#######################
+			$join_conds = array(
+				'p' => array(
+					'RIGHT OUTER JOIN', 'ar.page_id=p.page_id'
+				),
+				'pp' => array(
+					'LEFT OUTER JOIN', 'ar.page_id=pp_page'
+				),
+			);
+			
+			$tables['c'] = 'categorylinks';
+			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
+			$conds = "ar.page_id IS NOT NULL AND NOT ($conds)";
+		
 		} else { // all approved pages
 			$join_conds = array(
 				'p' => array(
@@ -200,7 +252,8 @@ class SpecialApprovedRevsPage extends QueryPage {
 					'LEFT OUTER JOIN', 'ar.page_id=pp_page'
 				),
 			);
-			$conds = "(p.page_namespace IN $namespacesString) OR (pp_propname = 'approvedrevs' AND pp_value = 'y')";
+			$conds = null; // get everything from approved_revs table
+			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
 		}
 
 		return array(

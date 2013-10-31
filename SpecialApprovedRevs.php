@@ -86,7 +86,7 @@ class SpecialApprovedRevsPage extends QueryPage {
 		$navLine .= implode(' | ', $navLinks);
 
 		$out = Xml::tags( 'p', null, $navLine ) . "\n";
-		if ( $this->mMode == 'grandfathered' )
+		if ( $this->mMode == 'grandfathered' || $this->mMode == 'grandfatheredfiles' )
 			return $out . Xml::tags( 
 				'p', array('style'=>'font-style:italic;'), wfMessage('approvedrevs-grandfathered-description')->parse() );
 		else

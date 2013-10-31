@@ -156,23 +156,23 @@ class SpecialApprovedRevsPage extends QueryPage {
 		}
 		
 
-		// $namespacesString = '(' . implode( ',', $egApprovedRevsNamespaces ) . ')';
-		if ( count($perms['NamespaceIDs']) > 0 )
+		if ( count($perms['NamespaceIDs']) > 0 ) {
 			$namespacesString = '(p.page_namespace IN (' . implode(',', $perms['NamespaceIDs']) . ')) OR ';
-		else
+		} else {
 			$namespacesString = '';
+		}
 		
-		
-		if ( count($perms['CategoryColumns']) > 0 )
+		if ( count($perms['CategoryColumns']) > 0 ) {
 			$categoryString = '(c.cl_to IN (' . implode(',', $perms['CategoryColumns']) . ')) OR '; 
-		else
+		} else {
 			$categoryString = '';
-
+		}
 		
-		if ( count($perms['PageIDs']) )
+		if ( count($perms['PageIDs']) ) {
 			$pagesString = '(p.page_id IN (' . implode(',', $perms['PageIDs']) . ')) OR ';
-		else
+		} else {
 			$pagesString = '';
+		}
 		
 		$tables = array(
 			'ar' => 'approved_revs',
@@ -186,17 +186,23 @@ class SpecialApprovedRevsPage extends QueryPage {
 			'p.page_latest AS latest_id', // required for all
 		);
 
+		$join_conds = array(
+			'p' => array(
+				'JOIN', 'ar.page_id=p.page_id'
+			),
+			'pp' => array(
+				'LEFT OUTER JOIN', 'ar.page_id=pp_page'
+			),
+		);
+
 		$conds = "$namespacesString $categoryString $pagesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
 		
+				
+		#
+		#	NOTLATEST
+		#
 		if ( $this->mMode == 'notlatest' ) {
-			$join_conds = array(
-				'p' => array(
-					'JOIN', 'ar.page_id=p.page_id'
-				),
-				'pp' => array(
-					'LEFT OUTER JOIN', 'ar.page_id=pp_page'
-				),
-			);
+
 			// gets pages in approved_revs table that 
 			//   (a) are not the latest rev
 			//   (b) satisfy MediaWiki:approvedrevs-permissions
@@ -206,56 +212,27 @@ class SpecialApprovedRevsPage extends QueryPage {
 			$conds = "p.page_latest != ar.rev_id"; // gets everything in the approved_revs table that is not latest rev
 		
 		
+		#
+		#	UNAPPROVED
+		#
 		} elseif ( $this->mMode == 'unapproved' ) {
-			$join_conds = array(
-				'p' => array(
-					'RIGHT OUTER JOIN', 'ar.page_id=p.page_id'
-				),
-				'pp' => array(
-					'LEFT OUTER JOIN', 'ar.page_id=pp_page'
-				),
-			);
-			
+
 			$tables['c'] = 'categorylinks';
+			$join_conds['p'] = array( 'RIGHT OUTER JOIN', 'ar.page_id=p.page_id' );			
 			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
-
-
 			$conds = "ar.page_id IS NULL AND ($conds)";
 		
 		
-		} elseif ( $this->mMode == 'grandfathered' ) {
-			#######################
-			#                     #
-			#  THIS DOESN'T WORK  #
-			#     IT'S BROKEN     #
-			#                     #
-			#######################
-			$join_conds = array(
-				'p' => array(
-					'RIGHT OUTER JOIN', 'ar.page_id=p.page_id'
-				),
-				'pp' => array(
-					'LEFT OUTER JOIN', 'ar.page_id=pp_page'
-				),
-			);
-			
-			$tables['c'] = 'categorylinks';
-			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
-			$conds = "ar.page_id IS NOT NULL AND NOT ($conds)";
-		
-		} else { // all approved pages
-			$join_conds = array(
-				'p' => array(
-					'JOIN', 'ar.page_id=p.page_id',
-				),
-				'pp' => array(
-					'LEFT OUTER JOIN', 'ar.page_id=pp_page'
-				),
-			);
+		#
+		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
+		#
+		} else { 
+
 			$conds = null; // get everything from approved_revs table
 			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
 		}
 
+		
 		return array(
 			'tables' => $tables,
 			'fields' => $fields,
@@ -286,7 +263,7 @@ class SpecialApprovedRevsPage extends QueryPage {
 			
 			$line = $pageLink;
 			if ( $egApprovedRevsShowApproveLatest &&
-				$title->userCan( 'approverevisions' ) ) {
+				ApprovedRevs::userCanApprove( $title ) ) {
 				$line .= ' (' . Xml::element( 'a',
 					array( 'href' => $title->getLocalUrl(
 						array(

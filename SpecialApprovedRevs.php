@@ -56,35 +56,35 @@ class SpecialApprovedRevsPage extends QueryPage {
 	function getPageHeader() {
 		// show the names of the three lists of pages, with the one
 		// corresponding to the current "mode" not being linked
-		$approvedPagesTitle = SpecialPage::getTitleFor( 'ApprovedRevs' );
 		$navLine = wfMsg( 'approvedrevs-view' ) . ' ';
 		
-		$links_messages = array(
+		$links_messages = array( // pages
 			'approvedrevs-approvedpages'      => '',
 			'approvedrevs-notlatestpages'     => 'notlatest',
 			'approvedrevs-unapprovedpages'    => 'unapproved',
 			'approvedrevs-grandfatheredpages' => 'grandfathered',
 		);
 		
+		$navLinks = array();
 		foreach($links_messages as $msg => $query_param) {
-		
-			if ( $this->mMode == $query_param ) {
-				$navLinks[] = Xml::element( 'strong',
-					null,
-					wfMsg( $msg )
-				);
-			} else {
-				$show = ($query_param == '') ? array() : array( 'show' => $query_param );
-				$navLinks[] = Xml::element( 'a',
-					array( 'href' => $approvedPagesTitle->getLocalURL( $show ) ),
-					wfMsg( $msg )
-				);
-			}
-
+			$navLinks[] = $this->createHeaderLink($msg, $query_param);
 		}
-		
 		$navLine .= implode(' | ', $navLinks);
 		
+		$navLine .= '<br />' . wfMsg( 'approvedrevs-viewfiles' ) . ' ';
+		
+		$links_messages = array( // files
+			'approvedrevs-approvedfiles'      => 'allfiles',
+			'approvedrevs-notlatestfiles'     => 'notlatestfiles',
+			'approvedrevs-unapprovedfiles'    => 'unapprovedfiles',
+			'approvedrevs-grandfatheredfiles' => 'grandfatheredfiles',
+		);
+		$navLinks = array();
+		foreach($links_messages as $msg => $query_param) {
+			$navLinks[] = $this->createHeaderLink($msg, $query_param);
+		}
+		$navLine .= implode(' | ', $navLinks);
+
 		$out = Xml::tags( 'p', null, $navLine ) . "\n";
 		if ( $this->mMode == 'grandfathered' )
 			return $out . Xml::tags( 
@@ -93,6 +93,25 @@ class SpecialApprovedRevsPage extends QueryPage {
 			return $out;
 	}
 
+	function createHeaderLink($msg, $query_param) {
+	
+		$approvedPagesTitle = SpecialPage::getTitleFor( 'ApprovedRevs' );
+
+		if ( $this->mMode == $query_param ) {
+			return Xml::element( 'strong',
+				null,
+				wfMsg( $msg )
+			);
+		} else {
+			$show = ($query_param == '') ? array() : array( 'show' => $query_param );
+			return Xml::element( 'a',
+				array( 'href' => $approvedPagesTitle->getLocalURL( $show ) ),
+				wfMsg( $msg )
+			);
+		}
+
+	}
+	
 	/**
 	 * Set parameters for standard navigation links.
 	 */

@@ -59,59 +59,31 @@ class SpecialApprovedRevsPage extends QueryPage {
 		$approvedPagesTitle = SpecialPage::getTitleFor( 'ApprovedRevs' );
 		$navLine = wfMsg( 'approvedrevs-view' ) . ' ';
 		
-		if ( $this->mMode == '' ) {
-			$navLine .= Xml::element( 'strong',
-				null,
-				wfMsg( 'approvedrevs-approvedpages' )
-			);
-		} else {
-			$navLine .= Xml::element( 'a',
-				array( 'href' => $approvedPagesTitle->getLocalURL() ),
-				wfMsg( 'approvedrevs-approvedpages' )
-			);
-		}
+		$links_messages = array(
+			'approvedrevs-approvedpages'      => '',
+			'approvedrevs-notlatestpages'     => 'notlatest',
+			'approvedrevs-unapprovedpages'    => 'unapproved',
+			'approvedrevs-grandfatheredpages' => 'grandfathered',
+		);
 		
-		$navLine .= ' | ';
+		foreach($links_messages as $msg => $query_param) {
 		
-		if ( $this->mMode == 'notlatest' ) {
-			$navLine .= Xml::element( 'strong',
-				null,
-				wfMsg( 'approvedrevs-notlatestpages' )
-			);
-		} else {
-			$navLine .= Xml::element( 'a',
-				array( 'href' => $approvedPagesTitle->getLocalURL( array( 'show' => 'notlatest' ) ) ),
-				wfMsg( 'approvedrevs-notlatestpages' )
-			);
-		}
-		
-		$navLine .= ' | ';
-		
-		if ( $this->mMode == 'unapproved' ) {
-			$navLine .= Xml::element( 'strong',
-				null,
-				wfMsg( 'approvedrevs-unapprovedpages' )
-			);
-		} else {
-			$navLine .= Xml::element( 'a',
-				array( 'href' => $approvedPagesTitle->getLocalURL( array( 'show' => 'unapproved' ) ) ),
-				wfMsg( 'approvedrevs-unapprovedpages' )
-			);
-		}
+			if ( $this->mMode == $query_param ) {
+				$navLinks[] = Xml::element( 'strong',
+					null,
+					wfMsg( $msg )
+				);
+			} else {
+				$show = ($query_param == '') ? array() : array( 'show' => $query_param );
+				$navLinks[] = Xml::element( 'a',
+					array( 'href' => $approvedPagesTitle->getLocalURL( $show ) ),
+					wfMsg( $msg )
+				);
+			}
 
-		$navLine .= ' | ';
-		
-		if ( $this->mMode == 'grandfathered' ) {
-			$navLine .= Xml::element( 'strong',
-				null,
-				wfMsg( 'approvedrevs-grandfatheredpages' )
-			);
-		} else {
-			$navLine .= Xml::element( 'a',
-				array( 'href' => $approvedPagesTitle->getLocalURL( array( 'show' => 'grandfathered' ) ) ),
-				wfMsg( 'approvedrevs-grandfatheredpages' )
-			);
 		}
+		
+		$navLine .= implode(' | ', $navLinks);
 		
 		$out = Xml::tags( 'p', null, $navLine ) . "\n";
 		if ( $this->mMode == 'grandfathered' )

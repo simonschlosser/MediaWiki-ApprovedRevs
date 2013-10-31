@@ -162,14 +162,9 @@ class ApprovedRevs {
 			)
 		);
 		$row = $dbr->fetchRow( $res );
-		return $title->isApprovable = ( $row[0] == '1' );
-		// if ( $row[0] == '1' ) // FIXME: use this if-statement if doing the method below
-		// 	return $title->isApprovable = true;
+		if ( $row[0] == '1' )
+			return $title->isApprovable = true;
 		
-
-		/*
-		Jamesmontalvo3: cannot decide whether I want this
-
 		// if a page already has an approval, it must be approvable in order to be able to 
 		// view/modify approvals. Though this wasn't the case on previous versions of ApprovedRevs,
 		// it is necessary now since which pages can be approved can change much more easily
@@ -178,16 +173,16 @@ class ApprovedRevs {
 			if ($ts !== false) {
 				// only approvable because it already has an approved rev, not because it is in 
 				// message "approvedrev-permissions" 
-				$title->isApprovableByHistoryOnly = true;
+				$title->isGrandfatheredApprovable = true;
 				return $title->isApprovable = true;
 			}
 		}
 		// if title in approved_revs table
 		else if ( self::getApprovedRevIDfromDB( $title->getArticleID() ) ) {
-			$title->isApprovableByHistoryOnly = true;
+			$title->isGrandfatheredApprovable = true;
 			return $title->isApprovable = true;
 		}
-		*/
+
 
 	}
 	

@@ -220,8 +220,11 @@ class SpecialApprovedRevsPage extends QueryPage {
 		
 		$pageLink = $skin->link( $title );
 		
-		if ( $this->mMode == 'unapproved' ) {
+		if ( $this->mMode == 'unapproved' || $this->mMode == 'grandfathered' ) {
 			global $egApprovedRevsShowApproveLatest;
+			
+			// if ( ! ApprovedRevs::pageIsApprovable( /* this isn't the right function... */ ) )
+				// return '';
 			
 			$line = $pageLink;
 			if ( $egApprovedRevsShowApproveLatest &&

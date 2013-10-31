@@ -98,8 +98,27 @@ class SpecialApprovedRevsPage extends QueryPage {
 				wfMsg( 'approvedrevs-unapprovedpages' )
 			);
 		}
+
+		$navLine .= ' | ';
 		
-		return Xml::tags( 'p', null, $navLine ) . "\n";
+		if ( $this->mMode == 'grandfathered' ) {
+			$navLine .= Xml::element( 'strong',
+				null,
+				wfMsg( 'approvedrevs-grandfatheredpages' )
+			);
+		} else {
+			$navLine .= Xml::element( 'a',
+				array( 'href' => $approvedPagesTitle->getLocalURL( array( 'show' => 'grandfathered' ) ) ),
+				wfMsg( 'approvedrevs-grandfatheredpages' )
+			);
+		}
+		
+		$out = Xml::tags( 'p', null, $navLine ) . "\n";
+		if ( $this->mMode == 'grandfathered' )
+			return $out . Xml::tags( 
+				'p', array('style'=>'font-style:italic;'), wfMessage('approvedrevs-grandfathered-description')->parse() );
+		else
+			return $out;
 	}
 
 	/**
@@ -223,8 +242,19 @@ class SpecialApprovedRevsPage extends QueryPage {
 		if ( $this->mMode == 'unapproved' || $this->mMode == 'grandfathered' ) {
 			global $egApprovedRevsShowApproveLatest;
 			
-			// if ( ! ApprovedRevs::pageIsApprovable( /* this isn't the right function... */ ) )
-				// return '';
+			$nsApproved = ApprovedRevs::titleInNamespacePermissions($title);
+			$cats = ApprovedRevs::getTitleApprovableCategories($title);
+			$catsApproved = ApprovedRevs::titleInCategoryPermissions($title);
+			$pgApproved = ApprovedRevs::titleInPagePermissions($title);
+			$magicApproved = ApprovedRevs::pageHasMagicWord($title);
+
+			
+			if ( $this->mMode == 'grandfathered' 
+				&& ($nsApproved || $catsApproved || $pgApproved || $magicApproved) )
+			{
+				// if showing grandfathered pages only, don't show pages that have real approvability
+				return '';  
+			}
 			
 			$line = $pageLink;
 			if ( $egApprovedRevsShowApproveLatest &&

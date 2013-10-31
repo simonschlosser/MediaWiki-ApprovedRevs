@@ -132,15 +132,14 @@ class ApprovedRevs {
 		}
 
 		$perms = self::getPermissions();
-		if ( in_array( self::getNamespaceName( $title ), $perms['Namespaces'] ) )
+		if ( self::titleInNamespacePermissions( $title ) )
 			return $title->isApprovable = true;
-		if ( count( array_intersect( self::getCategoryList( $title ), $perms['Categories'] ) ) > 0 )
+		if ( self::titleInCategoryPermissions( $title ) )
 			return $title->isApprovable = true;
-		if ( in_array( $title->getText(), $perms['Pages'] ) )
+		if ( self::titleInPagePermissions( $title ) )
 			return $title->isApprovable = true;
-		
 
-		// Jamesmontalvo3 question/discussion:
+		// FIXME: Jamesmontalvo3 question/discussion:
 		// Regarding below: not sure if we should keep this. It seems cleaner to say you can add 
 		// the approval-requirement on a case-by-case basis via the approvedrevs-permissions page
 		// than to allow any user to throw __APPROVEDREVS__ onto a page. Also, with the new 
@@ -148,21 +147,12 @@ class ApprovedRevs {
 		// cases) will be able to approve this. Rather than adding __APPROVEDREVS__ instead add
 		// [[Category:Pages with Approved Revisions]] (or similar category) which can more finely 
 		// limit who can have permissions
-
-		// it's not in an included namespace, so check for the page
-		// property - for some reason, calling the standard
+		// --------------------------------------------------------------------
+		// it doesn't satisfy mediawiki:approvedrevs-permissions, so check 
+		// for the page property - for some reason, calling the standard
 		// getProperty() function doesn't work, so we just do a DB
 		// query on the page_props table
-		$dbr = wfGetDB( DB_SLAVE );
-		$res = $dbr->select( 'page_props', 'COUNT(*)',
-			array(
-				'pp_page' => $title->getArticleID(),
-				'pp_propname' => 'approvedrevs',
-				'pp_value' => 'y'
-			)
-		);
-		$row = $dbr->fetchRow( $res );
-		if ( $row[0] == '1' )
+		if ( self::pageHasMagicWord( $title ) )
 			return $title->isApprovable = true;
 		
 		// if a page already has an approval, it must be approvable in order to be able to 
@@ -188,6 +178,58 @@ class ApprovedRevs {
 	
 	public static function mediaIsApprovable ( Title $title ) {
 		return self::pageIsApprovable( $title, true ); // use pageIsApprovable() with files allowed
+	}
+
+	public static function titleInNamespacePermissions ( $title ) {
+		$perms = self::getPermissions();
+
+		if ( in_array( self::getNamespaceName( $title ), $perms['Namespaces'] ) )
+			return true;
+		else 
+			return false;
+	}
+	
+	public static function titleInCategoryPermissions ( $title ) {
+		$perms = self::getPermissions();
+
+		if ( count( self::getTitleApprovableCategories($title) ) > 0 )
+			return true;
+		else
+			return false;
+	}	
+	
+	public static function titleInPagePermissions ( $title ) {
+		$perms = self::getPermissions();
+		
+		if ( in_array( $title->getText(), $perms['Pages'] ) )
+			return true;
+		elseif ( in_array( $title->getNsText().':'.$title->getText(), $perms['Pages'] ) )
+			return true;
+		else
+			return false;
+	}
+	
+	// check if page has __APPROVEDREVS__
+	public static function pageHasMagicWord ( $title ) {
+	
+		$dbr = wfGetDB( DB_SLAVE );
+		$res = $dbr->select( 'page_props', 'COUNT(*)',
+			array(
+				'pp_page' => $title->getArticleID(),
+				'pp_propname' => 'approvedrevs',
+				'pp_value' => 'y'
+			)
+		);
+		$row = $dbr->fetchRow( $res );
+		if ( $row[0] == '1' )
+			return true;
+		else
+			return false;
+	}
+	
+	public static function getTitleApprovableCategories ( $title ) {
+		$perms = self::getPermissions();
+		return array_intersect( self::getCategoryList( $title ), $perms['Categories'] );
 	}
 
 	public static function userCanApprove ( $title ) {

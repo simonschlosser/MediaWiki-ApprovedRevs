@@ -624,4 +624,57 @@ class ApprovedRevs {
 		
 	}
 
+	public static function getPermissionsStringsForDB () {
+
+		$perms = self::getPermissions();
+		$nsIDs = array();
+
+		foreach($perms['Namespaces'] as $ns) {
+			if ( strtolower($ns) == 'main' )
+				$ns = '';
+			$nsIDs[] = MWNamespace::getCanonicalIndex( strtolower($ns) );
+		}
+
+		// using array of categories from $perms, create array of category
+		// names in the same form as categorylinks.cl_to
+		// FIXME: is mysql_real_escape_string the way to go? of does MW have something built in?
+		$catCols = array();
+		foreach($perms['Categories'] as $cat) {
+			$catObj = Category::newFromName( $cat );
+			$catCols[] = "'" . mysql_real_escape_string($catObj->getName()) . "'";
+		}
+
+		$pgIDs = array();
+		foreach($perms['Pages'] as $pg) {
+			$title = Title::newFromText( $pg );
+			$pgIDs[] = $title->getArticleID();
+		}
+		
+
+		// if ( count($nsIDs) > 0 ) {
+			// $ns = ;
+		// } else {
+			// $ns = false;
+		// }
+		
+		// if ( count($catCols) > 0 ) {
+			// $cat = implode(',', $catCols); 
+		// } else {
+			// $cat = false;
+		// }
+		
+		// if ( count($pgIDs) ) {
+			// $pg = implode(',', $pgIDs);
+		// } else {
+			// $pg = false;
+		// }
+		
+		return array( 
+			count($nsIDs) > 0   ? implode(',', $nsIDs)   : false,
+			count($catCols) > 0 ? implode(',', $catCols) : false,
+			count($nsIDs) > 0   ? implode(',', $nsIDs)   : false,
+		);
+		
+	}
+	
 }

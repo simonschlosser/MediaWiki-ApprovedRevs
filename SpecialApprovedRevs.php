@@ -131,48 +131,6 @@ class SpecialApprovedRevsPage extends QueryPage {
 	 */	
 	function getQueryInfo() {
 		global $egApprovedRevsNamespaces;
-
-		$perms = ApprovedRevs::getPermissions();
-		$perms['NamespaceIDs'] = array();
-
-		foreach($perms['Namespaces'] as $ns) {
-			if ( strtolower($ns) == 'main' )
-				$ns = '';
-			$perms['NamespaceIDs'][] = MWNamespace::getCanonicalIndex( strtolower($ns) );
-		}
-
-		// using array of categories from $perms, create array of category
-		// names in the same form as categorylinks.cl_to
-		$perms['CategoryColumns'] = array();
-		foreach($perms['Categories'] as $cat) {
-			$catObj = Category::newFromName( $cat );
-			$perms['CategoryColumns'][] = "'" . mysql_real_escape_string($catObj->getName()) . "'";
-		}
-
-		$perms['PageIDs'] = array();
-		foreach($perms['Pages'] as $pg) {
-			$title = Title::newFromText( $pg );
-			$perms['PageIDs'][] = $title->getArticleID();
-		}
-		
-
-		if ( count($perms['NamespaceIDs']) > 0 ) {
-			$namespacesString = '(p.page_namespace IN (' . implode(',', $perms['NamespaceIDs']) . ')) OR ';
-		} else {
-			$namespacesString = '';
-		}
-		
-		if ( count($perms['CategoryColumns']) > 0 ) {
-			$categoryString = '(c.cl_to IN (' . implode(',', $perms['CategoryColumns']) . ')) OR '; 
-		} else {
-			$categoryString = '';
-		}
-		
-		if ( count($perms['PageIDs']) ) {
-			$pagesString = '(p.page_id IN (' . implode(',', $perms['PageIDs']) . ')) OR ';
-		} else {
-			$pagesString = '';
-		}
 		
 		$tables = array(
 			'ar' => 'approved_revs',
@@ -194,9 +152,7 @@ class SpecialApprovedRevsPage extends QueryPage {
 				'LEFT OUTER JOIN', 'ar.page_id=pp_page'
 			),
 		);
-
-		$conds = "$namespacesString $categoryString $pagesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
-		
+				
 				
 		#
 		#	NOTLATEST
@@ -218,11 +174,17 @@ class SpecialApprovedRevsPage extends QueryPage {
 		} elseif ( $this->mMode == 'unapproved' ) {
 
 			$tables['c'] = 'categorylinks';
-			$join_conds['p'] = array( 'RIGHT OUTER JOIN', 'ar.page_id=p.page_id' );			
+			$join_conds['p'] = array( 'RIGHT OUTER JOIN', 'ar.page_id=p.page_id' );	// override	
 			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
-			$conds = "ar.page_id IS NULL AND ($conds)";
-		
-		
+
+			list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();
+			$conds  = ($ns === false)  ? '' : "(p.page_namespace IN ($ns)) OR ";
+			$conds .= ($cat === false) ? '' : "(c.cl_to IN ($cat)) OR ";
+			$conds .= ($pg === false)  ? '' : "(p.page_id IN ($pg)) OR ";
+			$conds .= "(pp_propname = 'approvedrevs' AND pp_value = 'y')";
+			$conds  = "ar.page_id IS NULL AND ($conds)";		
+
+			
 		#
 		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
 		#

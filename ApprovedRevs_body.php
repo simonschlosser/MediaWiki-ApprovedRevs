@@ -19,7 +19,7 @@ class ApprovedRevs {
 	static $mUserGroups = null;
 	static $james_test = null; // because jamesmontalvo3 doesn't know a better way to test things...
 	static $banned_NS_names = array(
-		"File", "MediaWiki"
+		"File", "MediaWiki", "Category"
 	);
 	static $banned_NS_IDs = false; // requires initialization
 	
@@ -157,7 +157,7 @@ class ApprovedRevs {
 		// for the page property - for some reason, calling the standard
 		// getProperty() function doesn't work, so we just do a DB
 		// query on the page_props table
-		if ( self::pageHasMagicWord( $title ) )
+		if ( ( ! $is_media ) && self::pageHasMagicWord( $title ) )
 			return $title->isApprovable = true;
 		
 		// if a page already has an approval, it must be approvable in order to be able to 

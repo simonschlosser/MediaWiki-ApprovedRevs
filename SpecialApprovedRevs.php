@@ -217,6 +217,72 @@ class SpecialApprovedRevsPage extends QueryPage {
 		);
 	}
 
+	function getFileQueryInfo() {
+		global $egApprovedRevsNamespaces;
+		
+		$tables = array(
+			'ar' => 'approved_revs_files',
+			'im' => 'image',
+		);
+
+		$fields = array(
+			'im.img_name AS name', // required for ???
+			'ar.approved_sha1 AS a_sha1', // required for ???
+			'ar.approved_timestamp AS a_ts', // required for ???
+			'p.page_latest AS latest_id', // required for ???
+		);
+
+		$join_conds = array(
+			'im' => array(
+				'JOIN', 'ar.file_title=im.img_name'
+			),
+		);
+		
+				
+		#
+		#	NOTLATEST
+		#
+		if ( $this->mMode == 'notlatest' ) {
+			
+			// Name/Title both exist, sha1's don't match OR timestamps don't match
+			$conds = ""; // gets everything in the approved_revs_files table that is not latest rev
+		
+		
+		#
+		#	UNAPPROVED
+		#
+		} elseif ( $this->mMode == 'unapproved' ) {
+
+			$tables['c'] = 'categorylinks';
+			$join_conds['p'] = array( 'RIGHT OUTER JOIN', 'ar.page_id=p.page_id' );	// override	
+			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
+			
+			list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();
+			$conds  = ($ns === false)  ? '' : "(p.page_namespace IN ($ns)) OR ";
+			$conds .= ($cat === false) ? '' : "(c.cl_to IN ($cat)) OR ";
+			$conds .= ($pg === false)  ? '' : "(p.page_id IN ($pg)) OR ";
+			$conds .= "(pp_propname = 'approvedrevs' AND pp_value = 'y')";
+			$conds  = "ar.page_id IS NULL AND ($conds) AND $bannedNS";		
+
+			
+		#
+		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
+		#
+		} else { 
+
+			$conds = $bannedNS; // get everything from approved_revs table
+			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
+		}
+
+		
+		return array(
+			'tables' => $tables,
+			'fields' => $fields,
+			'join_conds' => $join_conds,
+			'conds' => $conds,
+		);
+	}
+	
 	function getOrder() {
 		return ' ORDER BY p.page_namespace, p.page_title ASC';
 	}

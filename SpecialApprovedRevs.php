@@ -23,7 +23,11 @@ class SpecialApprovedRevs extends SpecialPage {
 		list( $limit, $offset ) = wfCheckLimits();
 		
 		$mode = $wgRequest->getVal( 'show' );
-		$rep = new SpecialApprovedRevsPage( $mode );
+		$fileactions = array('allfiles','notlatestfiles','unapprovedfiles','grandfatheredfiles');
+		if ( in_array($mode,$fileactions) )
+			$rep = new SpecialApprovedRevsFilesPage( $mode );
+		else
+			$rep = new SpecialApprovedRevsPage( $mode );
 		
 		if ( method_exists( $rep, 'execute' ) ) {
 			return $rep->execute( $query );
@@ -141,7 +145,7 @@ class SpecialApprovedRevsPage extends QueryPage {
 	 */	
 	function getQueryInfo() {
 		global $egApprovedRevsNamespaces;
-		
+				
 		$tables = array(
 			'ar' => 'approved_revs',
 			'p' => 'page',
@@ -180,72 +184,6 @@ class SpecialApprovedRevsPage extends QueryPage {
 			// $join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
 			// $conds = "p.page_latest != ar.rev_id AND ($conds)";  
 			$conds = "p.page_latest != ar.rev_id AND $bannedNS"; // gets everything in the approved_revs table that is not latest rev
-		
-		
-		#
-		#	UNAPPROVED
-		#
-		} elseif ( $this->mMode == 'unapproved' ) {
-
-			$tables['c'] = 'categorylinks';
-			$join_conds['p'] = array( 'RIGHT OUTER JOIN', 'ar.page_id=p.page_id' );	// override	
-			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
-			
-			list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();
-			$conds  = ($ns === false)  ? '' : "(p.page_namespace IN ($ns)) OR ";
-			$conds .= ($cat === false) ? '' : "(c.cl_to IN ($cat)) OR ";
-			$conds .= ($pg === false)  ? '' : "(p.page_id IN ($pg)) OR ";
-			$conds .= "(pp_propname = 'approvedrevs' AND pp_value = 'y')";
-			$conds  = "ar.page_id IS NULL AND ($conds) AND $bannedNS";		
-
-			
-		#
-		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
-		#
-		} else { 
-
-			$conds = $bannedNS; // get everything from approved_revs table
-			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
-		}
-
-		
-		return array(
-			'tables' => $tables,
-			'fields' => $fields,
-			'join_conds' => $join_conds,
-			'conds' => $conds,
-		);
-	}
-
-	function getFileQueryInfo() {
-		global $egApprovedRevsNamespaces;
-		
-		$tables = array(
-			'ar' => 'approved_revs_files',
-			'im' => 'image',
-		);
-
-		$fields = array(
-			'im.img_name AS name', // required for ???
-			'ar.approved_sha1 AS a_sha1', // required for ???
-			'ar.approved_timestamp AS a_ts', // required for ???
-			'p.page_latest AS latest_id', // required for ???
-		);
-
-		$join_conds = array(
-			'im' => array(
-				'JOIN', 'ar.file_title=im.img_name'
-			),
-		);
-		
-				
-		#
-		#	NOTLATEST
-		#
-		if ( $this->mMode == 'notlatest' ) {
-			
-			// Name/Title both exist, sha1's don't match OR timestamps don't match
-			$conds = ""; // gets everything in the approved_revs_files table that is not latest rev
 		
 		
 		#
@@ -382,4 +320,175 @@ class SpecialApprovedRevsPage extends QueryPage {
 		}
 	}
 	
+}
+
+class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
+
+
+	#
+	#	FILE QUERY
+	#
+	function getFileQueryInfo() {
+		global $egApprovedRevsNamespaces;
+		
+		$tables = array(
+			'ar' => 'approved_revs_files',
+			'im' => 'image',
+			'p' => 'page',
+			//'c' => 'categorylinks',
+		);
+
+	
+			// 'p.page_id AS id', // required for all all
+			// 'ar.rev_id AS rev_id', // not required for "unapproved", but won't hurt anything
+			// 'p.page_latest AS latest_id', // required for all
+
+		$fields = array(
+			'ar.file_title AS title', // required for ???
+			'ar.approved_sha1 AS approved_sha1', // required for ???
+			'ar.approved_timestamp AS approved_ts', // required for ???
+			'im.img_sha1 AS latest_sha1',
+			'im.img_timestamp AS latest_ts',
+			'p.page_id AS id',
+			//'c.cl_to as category', 
+		);
+		
+		$join_conds = array(
+			'im' => array( 'LEFT OUTER JOIN', 'ar.file_title=im.img_name' ),
+			'p'  => array( 'LEFT OUTER JOIN', 'ar.file_title=p.page_title' ),
+			//'c'  => array( 'LEFT OUTER JOIN', 'p.page_id=c.cl_from' ),
+		);
+		
+		#
+		#	NOTLATEST
+		#
+		if ( $this->mMode == 'notlatestfiles' ) {
+			
+			// Name/Title both exist, sha1's don't match OR timestamps don't match
+			$conds = "ar.approved_sha1!=im.img_sha1 OR ar.approved_timestamp!=im.img_timestamp";
+		
+		#
+		#	UNAPPROVED
+		#
+		} elseif ( $this->mMode == 'unapprovedfiles' ) {
+
+			$tables['c'] = 'categorylinks';
+			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=c.cl_from' );
+
+
+			$join_conds['p'] = array( 'RIGHT OUTER JOIN', 'ar.page_id=p.page_id' );	// override	
+
+			
+			list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();
+			$conds .= ($cat === false) ? '' : "(c.cl_to IN ($cat)) OR ";
+			$conds .= ($pg === false)  ? '' : "(p.page_id IN ($pg)) OR ";
+			$conds .= "(pp_propname = 'approvedrevs' AND pp_value = 'y')";
+			$conds  = "ar.page_id IS NULL AND ($conds) AND $bannedNS";		
+
+			
+		#
+		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
+		#
+		} else { 
+
+			$conds = $bannedNS; // get everything from approved_revs table
+			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
+		}
+
+		return array(
+			'tables' => $tables,
+			'fields' => $fields,
+			'join_conds' => $join_conds,
+			'conds' => $conds,
+			'options' => array( 'DISTINCT' => true ),
+		);
+				
+	}
+
+	function formatResult( $skin, $result ) {
+		$title = Title::newFromId( $result->id );
+		
+		$pageLink = $skin->link( $title );
+		
+		if ( $this->mMode == 'unapproved' || $this->mMode == 'grandfathered' ) {
+			global $egApprovedRevsShowApproveLatest;
+			
+			$nsApproved = ApprovedRevs::titleInNamespacePermissions($title);
+			$cats = ApprovedRevs::getTitleApprovableCategories($title);
+			$catsApproved = ApprovedRevs::titleInCategoryPermissions($title);
+			$pgApproved = ApprovedRevs::titleInPagePermissions($title);
+			$magicApproved = ApprovedRevs::pageHasMagicWord($title);
+
+			
+			if ( $this->mMode == 'grandfathered' 
+				&& ($nsApproved || $catsApproved || $pgApproved || $magicApproved) )
+			{
+				// if showing grandfathered pages only, don't show pages that have real approvability
+				return '';  
+			}
+			
+			$line = $pageLink;
+			if ( $egApprovedRevsShowApproveLatest &&
+				ApprovedRevs::userCanApprove( $title ) ) {
+				$line .= ' (' . Xml::element( 'a',
+					array( 'href' => $title->getLocalUrl(
+						array(
+							'action' => 'approve',
+							'oldid' => $result->latest_id
+						)
+					) ),
+					wfMsg( 'approvedrevs-approvelatest' )
+				) . ')';
+			}
+			
+			return $line;
+		} elseif ( $this->mMode == 'notlatest' ) {
+			$diffLink = Xml::element( 'a',
+				array( 'href' => $title->getLocalUrl(
+					array(
+						'diff' => $result->latest_id,
+						'oldid' => $result->rev_id
+					)
+				) ),
+				wfMsg( 'approvedrevs-difffromlatest' )
+			);
+			
+			return "$pageLink ($diffLink)";
+		} else { // main mode (pages with an approved revision)
+			global $wgUser, $wgOut, $wgLang;
+			
+			$additionalInfo = Xml::element( 'span',
+				array (
+					'class' => $result->rev_id == $result->latest_id ? 'approvedRevIsLatest' : 'approvedRevNotLatest'
+				),
+				wfMsg( 'approvedrevs-revisionnumber', $result->rev_id )
+			);
+
+			// Get data on the most recent approval from the
+			// 'approval' log, and display it if it's there.
+			$sk = $wgUser->getSkin();
+			$loglist = new LogEventsList( $sk, $wgOut );
+			$pager = new LogPager( $loglist, 'approval', '', $title->getText() );
+			$pager->mLimit = 1;
+			$pager->doQuery();
+			$row = $pager->mResult->fetchObject();
+			
+			if ( !empty( $row ) ) {
+				$timestamp = $wgLang->timeanddate( wfTimestamp( TS_MW, $row->log_timestamp ), true );
+				$date = $wgLang->date( wfTimestamp( TS_MW, $row->log_timestamp ), true );
+				$time = $wgLang->time( wfTimestamp( TS_MW, $row->log_timestamp ), true );
+				$userLink = $sk->userLink( $row->log_user, $row->user_name );
+				$additionalInfo .= ', ' . wfMessage(
+					'approvedrevs-approvedby',
+					$userLink,
+					$timestamp,
+					$row->user_name,
+					$date,
+					$time
+				)->text();
+			}
+			
+			return "$pageLink ($additionalInfo)";
+		}
+	}
 }

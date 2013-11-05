@@ -98,6 +98,8 @@ Instead, a blank page will be shown.',
 	'right-approverevisions' => 'Set a certain revision of a wiki page as approved',
 	'right-viewlinktolatest' => 'View explanatory text at the top of pages that have an approved revision',
 	'approvedrevs-historylabel' => '&#9733; Approved Revision',
+	'approvedrevs-approvedfile' => 'Approved file',
+	'approvedrevs-latestfile' => 'Latest file',
 );
 
 /** Message documentation (Message documentation)

@@ -324,11 +324,12 @@ class SpecialApprovedRevsPage extends QueryPage {
 
 class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 
+	static $repo = null;
 
 	#
 	#	FILE QUERY
 	#
-	function getFileQueryInfo() {
+	function getQueryInfo() {
 		global $egApprovedRevsNamespaces;
 		
 		$tables = array(
@@ -405,12 +406,33 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 				
 	}
 
+	// Page version: $result->id, $result->rev_id, $result->latest_id
+	// output should look something like:
+	// 
+	// Approved Revision and Grandfathered Files:
+	// [[My File.jpg]] (revision 2ba82h7f approved by Ejmontal on 28 October 2013 at 13:34)
+	//
+	// Not latest:
+	// [[My File.jpg]] (revision 2ba82h7f approved; revision 2ba82h7f latest)
+	//
+	// Unapproved:
+	// [[My File.jpg]]
 	function formatResult( $skin, $result ) {
 		$title = Title::newFromId( $result->id );
+				
+		if ( ! self::$repo )
+			self::$repo = RepoGroup::singleton();
+			
+		// $file = self::$repo->findFile( $title, array('time' => $timestamp) );
+		
 		
 		$pageLink = $skin->link( $title );
 		
-		if ( $this->mMode == 'unapproved' || $this->mMode == 'grandfathered' ) {
+		
+		#
+		#	Unapproved Files and Grandfathered Files
+		#
+		if ( $this->mMode == 'unapprovedfiles' || $this->mMode == 'grandfatheredfiles' ) {
 			global $egApprovedRevsShowApproveLatest;
 			
 			$nsApproved = ApprovedRevs::titleInNamespacePermissions($title);
@@ -427,33 +449,52 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 				return '';  
 			}
 			
-			$line = $pageLink;
-			if ( $egApprovedRevsShowApproveLatest &&
-				ApprovedRevs::userCanApprove( $title ) ) {
-				$line .= ' (' . Xml::element( 'a',
-					array( 'href' => $title->getLocalUrl(
-						array(
-							'action' => 'approve',
-							'oldid' => $result->latest_id
+			if ( $egApprovedRevsShowApproveLatest && ApprovedRevs::userCanApprove( $title ) ) {
+				$approveLink = ' (' . Xml::element(
+					'a',
+					array(
+						'href' => $title->getLocalUrl(
+							array(
+								'action' => 'approvefile',
+								'ts' => $result->latest_ts,
+								'sha1' => $result->latest_sha1
+							)
 						)
-					) ),
-					wfMsg( 'approvedrevs-approvelatest' )
+					),
+					wfMsg( 'approvedrevs-approve' )
 				) . ')';
 			}
 			
-			return $line;
-		} elseif ( $this->mMode == 'notlatest' ) {
-			$diffLink = Xml::element( 'a',
-				array( 'href' => $title->getLocalUrl(
-					array(
-						'diff' => $result->latest_id,
-						'oldid' => $result->rev_id
-					)
-				) ),
-				wfMsg( 'approvedrevs-difffromlatest' )
+			return "$pageLink ($approveLink)";
+		
+		#
+		# Not Latest Files:
+		# [[My File.jpg]] (revision 2ba82h7f approved; revision 2ba82h7f latest)
+		} elseif ( $this->mMode == 'notlatestfiles' ) {
+		
+			$approved_file = self::$repo->findFileFromKey(
+				$result->approved_sha1, 
+				array( 'time' => $result->approved_ts ) 
+			);
+			$latest_file = self::$repo->findFileFromKey(
+				$result->latest_sha1, 
+				array( 'time' => $result->latest_ts ) 
 			);
 			
-			return "$pageLink ($diffLink)";
+			$approvedLink = Xml::element( 'a',
+				array( 'href' => $approved_file->getUrl() ),
+				wfMsg( 'approvedrevs-approvedfile' )
+			);
+			$latestLink = Xml::element( 'a',
+				array( 'href' => $latest_file->getUrl() ),
+				wfMsg( 'approvedrevs-latestfile' )
+			);
+			
+			return "$pageLink ($approvedLink | $latestLink)";
+			
+		#
+		#	All Files with an approved revision
+		#
 		} else { // main mode (pages with an approved revision)
 			global $wgUser, $wgOut, $wgLang;
 			

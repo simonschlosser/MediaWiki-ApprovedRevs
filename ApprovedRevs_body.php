@@ -714,7 +714,7 @@ class ApprovedRevs {
 		return array( 
 			count($nsIDs) > 0   ? implode(',', $nsIDs)   : false,
 			count($catCols) > 0 ? implode(',', $catCols) : false,
-			count($nsIDs) > 0   ? implode(',', $nsIDs)   : false,
+			count($pgIDs) > 0   ? implode(',', $pgIDs)   : false,
 		);
 		
 	}

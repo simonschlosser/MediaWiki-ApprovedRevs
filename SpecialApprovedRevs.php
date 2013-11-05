@@ -345,7 +345,7 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 			// 'p.page_latest AS latest_id', // required for all
 
 		$fields = array(
-			'ar.file_title AS title', // required for ???
+			'im.img_name AS title', // required for ???
 			'ar.approved_sha1 AS approved_sha1', // required for ???
 			'ar.approved_timestamp AS approved_ts', // required for ???
 			'im.img_sha1 AS latest_sha1',
@@ -356,7 +356,7 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 		
 		$join_conds = array(
 			'im' => array( 'LEFT OUTER JOIN', 'ar.file_title=im.img_name' ),
-			'p'  => array( 'LEFT OUTER JOIN', 'ar.file_title=p.page_title' ),
+			'p'  => array( 'LEFT OUTER JOIN', 'im.img_name=p.page_title' ),
 			//'c'  => array( 'LEFT OUTER JOIN', 'p.page_id=c.cl_from' ),
 		);
 		
@@ -366,7 +366,8 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 		if ( $this->mMode == 'notlatestfiles' ) {
 			
 			// Name/Title both exist, sha1's don't match OR timestamps don't match
-			$conds = "ar.approved_sha1!=im.img_sha1 OR ar.approved_timestamp!=im.img_timestamp";
+			$conds = "p.page_namespace=" . NS_FILE
+				." AND (ar.approved_sha1!=im.img_sha1 OR ar.approved_timestamp!=im.img_timestamp)";
 		
 		#
 		#	UNAPPROVED
@@ -376,16 +377,26 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 			$tables['c'] = 'categorylinks';
 			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=c.cl_from' );
 
+			$join_conds['im'] = array( 'RIGHT OUTER JOIN', 'ar.file_title=im.img_name' );
 
-			$join_conds['p'] = array( 'RIGHT OUTER JOIN', 'ar.page_id=p.page_id' );	// override	
-
+			//$join_conds['p'] = array( 'LEFT OUTER JOIN', 'ar.file_title=p.page_title' );	// override	
 			
-			list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();
-			$conds .= ($cat === false) ? '' : "(c.cl_to IN ($cat)) OR ";
-			$conds .= ($pg === false)  ? '' : "(p.page_id IN ($pg)) OR ";
-			$conds .= "(pp_propname = 'approvedrevs' AND pp_value = 'y')";
-			$conds  = "ar.page_id IS NULL AND ($conds) AND $bannedNS";		
-
+			$perms = ApprovedRevs::getPermissions();
+			if ( in_array("File", $perms['Namespaces']) ) {
+				// if all files approvable no additional conditions required 
+				// besides NS_FILE requirement below
+				$conds = '';
+			}
+			else {
+				list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();
+				$conds = array();
+				if ($cat !== false) $conds[] = "(c.cl_to IN ($cat))";
+				if ($pg  !== false) $conds[] = "(p.page_id IN ($pg))";
+				$conds = ' AND (' . implode(' OR ', $conds) . ')';
+			}
+			
+			$conds = "ar.file_title IS NULL AND p.page_namespace=". NS_FILE . $conds;
+			
 			
 		#
 		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
@@ -418,7 +429,8 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 	// Unapproved:
 	// [[My File.jpg]]
 	function formatResult( $skin, $result ) {
-		$title = Title::newFromId( $result->id );
+	
+		$title = Title::makeTitle( NS_FILE, $result->title );
 				
 		if ( ! self::$repo )
 			self::$repo = RepoGroup::singleton();
@@ -464,8 +476,9 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 					wfMsg( 'approvedrevs-approve' )
 				) . ')';
 			}
+			else $approveLink = '';
 			
-			return "$pageLink ($approveLink)";
+			return "$pageLink$approveLink";
 		
 		#
 		# Not Latest Files:

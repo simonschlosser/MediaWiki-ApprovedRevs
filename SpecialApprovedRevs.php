@@ -406,7 +406,7 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 			if ( in_array("File", $perms['Namespaces']) ) {
 				// if all files approvable should break out of this...since none can be 
 				// grandfathered if they're all approvable
-				$conds = 'p.page_namespace=1 AND p.page_namespace=2'; // impossible condition, hack	
+				$conds = ' AND p.page_namespace=1 AND p.page_namespace=2'; // impossible condition, hack	
 			}
 			else {
 				list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();

@@ -202,7 +202,24 @@ class SpecialApprovedRevsPage extends QueryPage {
 			$conds .= "(pp_propname = 'approvedrevs' AND pp_value = 'y')";
 			$conds  = "ar.page_id IS NULL AND ($conds) AND $bannedNS";		
 
+		#
+		#	GRANDFATHERED
+		#
+		} else if ( $this->mMode == 'grandfathered' ) {
+
+			$tables['c'] = 'categorylinks';
+			$join_conds['p'] = array( 'LEFT OUTER JOIN', 'ar.page_id=p.page_id' );	// override	
+			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
 			
+			list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();
+			$conds = "";
+			$conds .= ($ns === false)  ? '' : "(p.page_namespace NOT IN ($ns)) AND ";
+			$conds .= ($cat === false) ? '' : "(p.page_id NOT IN (SELECT DISTINCT cl_from FROM categorylinks WHERE cl_to IN ($cat))) AND ";
+			$conds .= ($pg === false)  ? '' : "(p.page_id NOT IN ($pg)) AND ";
+			$conds .= "(pp_propname IS NULL OR NOT (pp_propname = 'approvedrevs' AND pp_value = 'y'))";	
+		
+			$options = array( 'DISTINCT' => true );
+		
 		#
 		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
 		#
@@ -212,13 +229,15 @@ class SpecialApprovedRevsPage extends QueryPage {
 			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
 		}
 
-		
-		return array(
+		$return = array(
 			'tables' => $tables,
 			'fields' => $fields,
 			'join_conds' => $join_conds,
 			'conds' => $conds,
+			'options' => array('DISTINCT'),
 		);
+		
+		return $return;
 	}
 	
 	function getOrder() {
@@ -240,20 +259,6 @@ class SpecialApprovedRevsPage extends QueryPage {
 		
 		if ( $this->mMode == 'unapproved' || $this->mMode == 'grandfathered' ) {
 			global $egApprovedRevsShowApproveLatest;
-			
-			$nsApproved = ApprovedRevs::titleInNamespacePermissions($title);
-			$cats = ApprovedRevs::getTitleApprovableCategories($title);
-			$catsApproved = ApprovedRevs::titleInCategoryPermissions($title);
-			$pgApproved = ApprovedRevs::titleInPagePermissions($title);
-			$magicApproved = ApprovedRevs::pageHasMagicWord($title);
-
-			
-			if ( $this->mMode == 'grandfathered' 
-				&& ($nsApproved || $catsApproved || $pgApproved || $magicApproved) )
-			{
-				// if showing grandfathered pages only, don't show pages that have real approvability
-				return '';  
-			}
 			
 			$line = $pageLink;
 			if ( $egApprovedRevsShowApproveLatest &&
@@ -336,13 +341,7 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 			'ar' => 'approved_revs_files',
 			'im' => 'image',
 			'p' => 'page',
-			//'c' => 'categorylinks',
 		);
-
-	
-			// 'p.page_id AS id', // required for all all
-			// 'ar.rev_id AS rev_id', // not required for "unapproved", but won't hurt anything
-			// 'p.page_latest AS latest_id', // required for all
 
 		$fields = array(
 			'im.img_name AS title', // required for ???
@@ -357,7 +356,6 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 		$join_conds = array(
 			'im' => array( 'LEFT OUTER JOIN', 'ar.file_title=im.img_name' ),
 			'p'  => array( 'LEFT OUTER JOIN', 'im.img_name=p.page_title' ),
-			//'c'  => array( 'LEFT OUTER JOIN', 'p.page_id=c.cl_from' ),
 		);
 		
 		#
@@ -395,6 +393,9 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 			
 			$conds = "ar.file_title IS NULL AND p.page_namespace=". NS_FILE . $conds;
 		
+		#
+		#	GRANDFATHERED
+		#
 		} else if ( $this->mMode == 'grandfatheredfiles' ) {
 			
 			$tables['c'] = 'categorylinks';
@@ -410,21 +411,20 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 			else {
 				list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();
 				$conds = array();
-				if ($cat !== false) $conds[] = "(c.cl_to NOT IN ($cat) OR c.cl_to IS NULL)";
+				// WAS: if ($cat !== false) $conds[] = "(c.cl_to NOT IN ($cat) OR c.cl_to IS NULL)";
+				if ($cat !== false) 
+					$conds[] = "p.page_id NOT IN (SELECT DISTINCT cl_from FROM categorylinks WHERE cl_to IN ($cat))";
 				if ($pg  !== false) $conds[] = "(p.page_id NOT IN ($pg))";
 				$conds = ' AND (' . implode(' AND ', $conds) . ')';
 			}
 			
 			$conds = "p.page_namespace=". NS_FILE . $conds;
-
 			
 		#
 		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
 		#
 		} else { 
-
 			$conds = "p.page_namespace=". NS_FILE; // get everything from approved_revs table
-			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
 		}
 
 		return array(
@@ -432,22 +432,11 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 			'fields' => $fields,
 			'join_conds' => $join_conds,
 			'conds' => $conds,
-			'options' => array( 'DISTINCT' => true ),
+			'options' => array( 'DISTINCT' ),
 		);
 				
 	}
 
-	// Page version: $result->id, $result->rev_id, $result->latest_id
-	// output should look something like:
-	// 
-	// Approved Revision and Grandfathered Files:
-	// [[My File.jpg]] (revision 2ba82h7f approved by Ejmontal on 28 October 2013 at 13:34)
-	//
-	// Not latest:
-	// [[My File.jpg]] (revision 2ba82h7f approved; revision 2ba82h7f latest)
-	//
-	// Unapproved:
-	// [[My File.jpg]]
 	function formatResult( $skin, $result ) {
 	
 		$title = Title::makeTitle( NS_FILE, $result->title );

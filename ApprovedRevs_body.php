@@ -624,7 +624,7 @@ class ApprovedRevs {
 		$rev_link = Xml::element(
 			'a',
 			array( 'href' => $display_file_url, 'title' => 'unique identifier: ' . $sha1 ),
-			substr($sha1, 0, 6) // show first 6 characters of sha1
+			substr($sha1, 0, 8) // show first 6 characters of sha1
 		);
 		$logParams = array( $rev_link );
 		$log->addEntry(

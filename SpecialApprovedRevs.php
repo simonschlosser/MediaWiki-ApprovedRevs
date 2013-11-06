@@ -296,7 +296,7 @@ class SpecialApprovedRevsPage extends QueryPage {
 			// 'approval' log, and display it if it's there.
 			$sk = $wgUser->getSkin();
 			$loglist = new LogEventsList( $sk, $wgOut );
-			$pager = new LogPager( $loglist, 'approval', '', $title->getText() );
+			$pager = new LogPager( $loglist, 'approval', '', $title );
 			$pager->mLimit = 1;
 			$pager->doQuery();
 			$row = $pager->mResult->fetchObject();
@@ -378,8 +378,6 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=c.cl_from' );
 
 			$join_conds['im'] = array( 'RIGHT OUTER JOIN', 'ar.file_title=im.img_name' );
-
-			//$join_conds['p'] = array( 'LEFT OUTER JOIN', 'ar.file_title=p.page_title' );	// override	
 			
 			$perms = ApprovedRevs::getPermissions();
 			if ( in_array("File", $perms['Namespaces']) ) {
@@ -396,14 +394,36 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 			}
 			
 			$conds = "ar.file_title IS NULL AND p.page_namespace=". NS_FILE . $conds;
+		
+		} else if ( $this->mMode == 'grandfatheredfiles' ) {
 			
+			$tables['c'] = 'categorylinks';
+			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=c.cl_from' );
+			$join_conds['im'] = array( 'LEFT OUTER JOIN', 'ar.file_title=im.img_name' );
+			
+			$perms = ApprovedRevs::getPermissions();
+			if ( in_array("File", $perms['Namespaces']) ) {
+				// if all files approvable should break out of this...since none can be 
+				// grandfathered if they're all approvable
+				$conds = 'p.page_namespace=1 AND p.page_namespace=2'; // impossible condition, hack	
+			}
+			else {
+				list( $ns, $cat, $pg ) = ApprovedRevs::getPermissionsStringsForDB();
+				$conds = array();
+				if ($cat !== false) $conds[] = "(c.cl_to NOT IN ($cat) OR c.cl_to IS NULL)";
+				if ($pg  !== false) $conds[] = "(p.page_id NOT IN ($pg))";
+				$conds = ' AND (' . implode(' AND ', $conds) . ')';
+			}
+			
+			$conds = "p.page_namespace=". NS_FILE . $conds;
+
 			
 		#
 		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
 		#
 		} else { 
 
-			$conds = $bannedNS; // get everything from approved_revs table
+			$conds = "p.page_namespace=". NS_FILE; // get everything from approved_revs table
 			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
 		}
 
@@ -513,20 +533,24 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 			
 			$additionalInfo = Xml::element( 'span',
 				array (
-					'class' => $result->rev_id == $result->latest_id ? 'approvedRevIsLatest' : 'approvedRevNotLatest'
+					'class' => 
+						($result->approved_sha1 == $result->latest_sha1 && $result->approved_ts == $result->latest_ts) ? 'approvedRevIsLatest' : 'approvedRevNotLatest'
 				),
-				wfMsg( 'approvedrevs-revisionnumber', $result->rev_id )
+				wfMsg( 'approvedrevs-revisionnumber', substr($result->approved_sha1, 0, 8) )
 			);
 
 			// Get data on the most recent approval from the
 			// 'approval' log, and display it if it's there.
 			$sk = $wgUser->getSkin();
 			$loglist = new LogEventsList( $sk, $wgOut );
-			$pager = new LogPager( $loglist, 'approval', '', $title->getText() );
+			$pager = new LogPager( $loglist, 'approval', '', $title );
 			$pager->mLimit = 1;
 			$pager->doQuery();
-			$row = $pager->mResult->fetchObject();
-			
+
+			$result = $pager->getResult();
+			$row = $result->fetchObject();
+
+
 			if ( !empty( $row ) ) {
 				$timestamp = $wgLang->timeanddate( wfTimestamp( TS_MW, $row->log_timestamp ), true );
 				$date = $wgLang->date( wfTimestamp( TS_MW, $row->log_timestamp ), true );

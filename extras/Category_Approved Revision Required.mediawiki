@@ -1,0 +1,3 @@
+Pages and files in this category require an approved revision.
+
+The person or people able to a page with this category can be set by setting the "Approver user" property: <nowiki>[[Approver user::User:Your Username]]</nowiki>

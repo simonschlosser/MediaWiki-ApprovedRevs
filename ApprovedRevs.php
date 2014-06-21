@@ -9,7 +9,7 @@ if ( !defined( 'MEDIAWIKI' ) ) die();
  * @author Yaron Koren
  */
 
-define( 'APPROVED_REVS_VERSION', '0.7' );
+define( 'APPROVED_REVS_VERSION', '1.0.0' );
 
 // credits
 $wgExtensionCredits['other'][] = array(
@@ -73,6 +73,15 @@ $wgHooks['sfHTMLBeforeForm'][] = 'ApprovedRevsHooks::addWarningToSFForm';
 $wgHooks['ArticleViewHeader'][] = 'ApprovedRevsHooks::setArticleHeader';
 $wgHooks['ArticleViewHeader'][] = 'ApprovedRevsHooks::displayNotApprovedHeader';
 
+// Approved File Revisions
+$wgHooks['UnknownAction'][] = 'ApprovedRevsHooks::setFileAsApproved';
+$wgHooks['UnknownAction'][] = 'ApprovedRevsHooks::unsetFileAsApproved';
+$wgHooks['ImagePageFileHistoryLine'][] = 'ApprovedRevsHooks::onImagePageFileHistoryLine';
+$wgHooks['BeforeParserFetchFileAndTitle'][] = 'ApprovedRevsHooks::ModifyFileLinks';
+$wgHooks['ImagePageFindFile'][] = 'ApprovedRevsHooks::onImagePageFindFile';
+$wgHooks['FileDeleteComplete'][] = 'ApprovedRevsHooks::onFileDeleteComplete';
+
+
 // logging
 $wgLogTypes['approval'] = 'approval';
 $wgLogNames['approval'] = 'approvedrevs-logname';
@@ -81,8 +90,8 @@ $wgLogActions['approval/approve'] = 'approvedrevs-approveaction';
 $wgLogActions['approval/unapprove'] = 'approvedrevs-unapproveaction';
 
 // user rights
-$wgAvailableRights[] = 'approverevisions';
-$wgGroupPermissions['sysop']['approverevisions'] = true;
+$wgAvailableRights[] = 'approverevisions'; // jamesmontalvo3: do we remove this or leave it behind even though it's not being used anymore?
+$wgGroupPermissions['sysop']['approverevisions'] = true; // jamesmontalvo3: do we remove this or leave it behind even though it's not being used anymore?
 $wgAvailableRights[] = 'viewlinktolatest';
 $wgGroupPermissions['*']['viewlinktolatest'] = true;
 

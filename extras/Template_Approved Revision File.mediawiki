@@ -1,0 +1,24 @@
+<noinclude>[[File:Approval Star.png|right|frame|Approval Required Star]]Adds approvability and valid approvers to files
+
+== Template Purpose ==
+This template is intended to be used on pages in the "File" namespace and performs three functions:
+# Adds the category [[:Category:Approved Revision Required]], which should be set in [[MediaWiki:Approvedrevs-permissions]] as requiring approvals. Adding the category to this page sets the file as approvable.
+# Adds the star icon shown above to the file page, indicating that this file requires approved revisions
+# Sets any people listed as allowed to approve the file's revisions
+
+== Standard Usage ==
+The following would set the file as approvable, allowing Stephanie and James to approve it.
+<pre>
+{{Approved Revision File|User:Jamesmontalvo3,User:Yaron Koren}}
+</pre>
+
+</noinclude><includeonly>{| style="width:100%; clear:both; margin:0.5em auto; padding: 5px 10px; background-color:#f7f8ff; border:2px solid #8888aa;"
+| style="width: 140px;" | [[File:Approval Star.png|link=Special:ApprovedRevs]]
+| '''Approved Revision File'''
+
+This file can have a specific revision approved for use. When the file is included in a page, the approved revision will be shown instead of the latest revision (unless the latest is the approved). See [[:Category:Approved Revision Required]] for more information. See [[Special:ApprovedRevs]] for lists of approved and approvable files and pages.{{#if:{{{1|}}}|&nbsp;
+
+
+This file can be approved by the following people:{{#arraymap:{{{1|}}}|,|VAR|[[Approver user::VAR]]
+* [[VAR]]|\n}}
+|}|}}[[Category:Approved Revision Required]]</includeonly>

@@ -450,11 +450,8 @@ class SpecialApprovedRevsFilesPage extends SpecialApprovedRevsPage {
 				
 		if ( ! self::$repo )
 			self::$repo = RepoGroup::singleton();
-			
-		// $file = self::$repo->findFile( $title, array('time' => $timestamp) );
-		
-		
-		$pageLink = $skin->link( $title );
+					
+		$pageLink = Linker::link( $title );
 		
 		
 		#

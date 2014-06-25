@@ -19,16 +19,11 @@ class SpecialApprovedRevs extends SpecialPage {
 
 		ApprovedRevs::addCSS();
 		$this->setHeaders();
-		// $this->getOutput()->setPageTitle( "approvedfiles" );
 
 		$rep = new SpecialApprovedRevsQueryPage( $this->getRequest()->getVal( 'show' ) );
 
-		if ( method_exists( $rep, 'execute' ) ) {
-			return $rep->execute( $query );
-		} else {
-			list( $limit, $offset ) = wfCheckLimits();
-			return $rep->doQuery( $offset, $limit );
-		}
+		return $rep->execute( $query );
+
 	}
 
 }

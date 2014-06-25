@@ -22,12 +22,8 @@ class SpecialApprovedFiles extends SpecialPage {
 
 		$rep = new SpecialApprovedFilesQueryPage( $this->getRequest()->getVal( 'show' ) );
 
-		if ( method_exists( $rep, 'execute' ) ) {
-			return $rep->execute( $query );
-		} else {
-			list( $limit, $offset ) = wfCheckLimits();
-			return $rep->doQuery( $offset, $limit );
-		}
+		return $rep->execute( $query );
+
 	}
 
 }

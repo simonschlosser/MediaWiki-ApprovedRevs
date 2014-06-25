@@ -8,6 +8,10 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedRevsQueryPage {
 		return 'ApprovedFiles';
 	}
 
+	public function execute ( $query ) {
+		parent::execute( $query );
+		$this->getOutput()->setPageTitle( wfMessage('approvedrevs-specialapprovedfiles')->text() );
+	}
 
 	function getPageHeader() {
 		// show the names of the four lists of pages, with the one

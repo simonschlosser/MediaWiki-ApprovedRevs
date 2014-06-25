@@ -15,6 +15,11 @@ class SpecialApprovedRevsQueryPage extends QueryPage {
 		return 'ApprovedRevs';
 	}
 
+	public function execute ( $query ) {
+		parent::execute( $query );
+		$this->getOutput()->setPageTitle( wfMessage('approvedrevs-specialapprovedpages')->text() );
+	}
+
 	function isExpensive() { return false; }
 
 	function isSyndicated() { return false; }

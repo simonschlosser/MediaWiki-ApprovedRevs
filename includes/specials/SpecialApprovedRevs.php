@@ -19,6 +19,7 @@ class SpecialApprovedRevs extends SpecialPage {
 
 		ApprovedRevs::addCSS();
 		$this->setHeaders();
+		// $this->getOutput()->setPageTitle( "approvedfiles" );
 
 		$rep = new SpecialApprovedRevsQueryPage( $this->getRequest()->getVal( 'show' ) );
 

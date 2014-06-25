@@ -16,9 +16,9 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedRevsQueryPage {
 		$navLine = wfMsg( 'approvedrevs-viewfiles' ) . ' ';
 		
 		$links_messages = array( // files
-			'approvedrevs-approvedfiles'      => 'allfiles',
-			'approvedrevs-notlatestfiles'     => 'notlatestfiles',
+			'approvedrevs-notlatestfiles'     => '', // was 'notlatestfiles', but is now default
 			'approvedrevs-unapprovedfiles'    => 'unapprovedfiles',
+			'approvedrevs-approvedfiles'      => 'allfiles',
 			'approvedrevs-grandfatheredfiles' => 'grandfatheredfiles',
 		);
 		$navLinks = array();
@@ -63,14 +63,14 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedRevsQueryPage {
 			'p'  => array( 'LEFT OUTER JOIN', 'im.img_name=p.page_title' ),
 		);
 		
+
 		#
-		#	NOTLATEST
+		#	ALLFILES: list all approved pages
+		#   also includes $this->mMode == 'grandfathered', see formatResult()
 		#
-		if ( $this->mMode == 'notlatestfiles' ) {
-			
-			// Name/Title both exist, sha1's don't match OR timestamps don't match
-			$conds = "p.page_namespace=" . NS_FILE
-				." AND (ar.approved_sha1!=im.img_sha1 OR ar.approved_timestamp!=im.img_timestamp)";
+		if ( $this->mMode == 'allfiles' ) {
+
+			$conds = "p.page_namespace=". NS_FILE; // get everything from approved_revs table
 		
 		#
 		#	UNAPPROVED
@@ -126,10 +126,14 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedRevsQueryPage {
 			$conds = "p.page_namespace=". NS_FILE . $conds;
 			
 		#
-		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
+		#	NOTLATEST
 		#
 		} else { 
-			$conds = "p.page_namespace=". NS_FILE; // get everything from approved_revs table
+			
+			// Name/Title both exist, sha1's don't match OR timestamps don't match
+			$conds = "p.page_namespace=" . NS_FILE
+				." AND (ar.approved_sha1!=im.img_sha1 OR ar.approved_timestamp!=im.img_timestamp)";
+
 		}
 
 		return array(

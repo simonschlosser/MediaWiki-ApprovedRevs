@@ -26,9 +26,9 @@ class SpecialApprovedRevsQueryPage extends QueryPage {
 		$navLine = wfMsg( 'approvedrevs-view' ) . ' ';
 		
 		$links_messages = array( // pages
-			'approvedrevs-approvedpages'      => '',
-			'approvedrevs-notlatestpages'     => 'notlatest',
-			'approvedrevs-unapprovedpages'    => 'unapproved',
+			'approvedrevs-notlatestpages'     => '', // was 'notlatest'
+			'approvedrevs-unapprovedpages'    => 'unapproved', 
+			'approvedrevs-approvedpages'      => 'allpages', // was '' (empty string)
 			'approvedrevs-grandfatheredpages' => 'grandfathered',
 		);
 		
@@ -48,7 +48,7 @@ class SpecialApprovedRevsQueryPage extends QueryPage {
 
 	function createHeaderLink($msg, $query_param) {
 	
-		$approvedPagesTitle = SpecialPage::getTitleFor( 'ApprovedRevs' );
+		$approvedPagesTitle = SpecialPage::getTitleFor( $this->getName() );
 
 		if ( $this->mMode == $query_param ) {
 			return Xml::element( 'strong',
@@ -120,20 +120,14 @@ class SpecialApprovedRevsQueryPage extends QueryPage {
 			. implode( ',' , ApprovedRevs::getBannedNamespaceIDs() )
 			. '))';
 
-				
 		#
-		#	NOTLATEST
+		#	ALLPAGES: all approved pages
+		#	also includes $this->mMode == 'grandfathered', see formatResult()
 		#
-		if ( $this->mMode == 'notlatest' ) {
+		if ( $this->mMode == 'allpages' ) {
 
-			// gets pages in approved_revs table that 
-			//   (a) are not the latest rev
-			//   (b) satisfy MediaWiki:approvedrevs-permissions
-			// $tables['c'] = 'categorylinks';
-			// $join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
-			// $conds = "p.page_latest != ar.rev_id AND ($conds)";  
-			$conds = "p.page_latest != ar.rev_id AND $bannedNS"; // gets everything in the approved_revs table that is not latest rev
-		
+			$conds = $bannedNS; // get everything from approved_revs table
+			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
 		
 		#
 		#	UNAPPROVED
@@ -170,12 +164,18 @@ class SpecialApprovedRevsQueryPage extends QueryPage {
 			$options = array( 'DISTINCT' => true );
 		
 		#
-		#	all approved pages, also includes $this->mMode == 'grandfathered', see formatResult()
+		#	NOTLATEST
 		#
-		} else { 
+		} else {
 
-			$conds = $bannedNS; // get everything from approved_revs table
-			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";
+			// gets pages in approved_revs table that 
+			//   (a) are not the latest rev
+			//   (b) satisfy MediaWiki:approvedrevs-permissions
+			// $tables['c'] = 'categorylinks';
+			// $join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
+			// $conds = "p.page_latest != ar.rev_id AND ($conds)";  
+			$conds = "p.page_latest != ar.rev_id AND $bannedNS"; // gets everything in the approved_revs table that is not latest rev
+
 		}
 
 		$return = array(

@@ -22,7 +22,7 @@ $wgExtensionCredits['other'][] = array(
 );
 
 // global variables
-$egApprovedRevsIP = dirname( __FILE__ ) . '/';
+$egApprovedRevsIP = __DIR__ . '/';
 $egApprovedRevsNamespaces = array( NS_MAIN, NS_USER, NS_PROJECT, NS_TEMPLATE, NS_HELP );
 $egApprovedRevsSelfOwnedNamespaces = array();
 $egApprovedRevsBlankIfUnapproved = false;
@@ -31,17 +31,24 @@ $egApprovedRevsShowApproveLatest = false;
 $egApprovedRevsShowNotApprovedMessage = false;
 
 // internationalization
-$wgMessagesDirs['ApprovedRevs'] = __DIR__ . '/i18n';
-$wgExtensionMessagesFiles['ApprovedRevs'] = $egApprovedRevsIP . 'ApprovedRevs.i18n.php';
-$wgExtensionMessagesFiles['ApprovedRevsAlias'] = $egApprovedRevsIP . 'ApprovedRevs.alias.php';
-$wgExtensionMessagesFiles['ApprovedRevsMagic'] = $egApprovedRevsIP . 'ApprovedRevs.i18n.magic.php';
+$wgMessagesDirs['ApprovedRevs'] = $egApprovedRevsIP . 'i18n';
+$wgExtensionMessagesFiles['ApprovedRevs'] = $egApprovedRevsIP . 'languages/ApprovedRevs.i18n.php';
+$wgExtensionMessagesFiles['ApprovedRevsAlias'] = $egApprovedRevsIP . 'languages/ApprovedRevs.alias.php';
+$wgExtensionMessagesFiles['ApprovedRevsMagic'] = $egApprovedRevsIP . 'languages/ApprovedRevs.i18n.magic.php';
 
-// register all classes
-$wgAutoloadClasses['ApprovedRevs'] = $egApprovedRevsIP . 'ApprovedRevs_body.php';
-$wgAutoloadClasses['ApprovedRevsHooks'] = $egApprovedRevsIP . 'ApprovedRevs.hooks.php';
+// autoload classes
+$wgAutoloadClasses['ApprovedRevs'] = $egApprovedRevsIP . 'includes/ApprovedRevs_body.php';
+$wgAutoloadClasses['ApprovedRevsHooks'] = $egApprovedRevsIP . 'includes/ApprovedRevsHooks.php';
+$wgAutoloadClasses['SpecialApprovedRevs'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedRevs.php';
+$wgAutoloadClasses['SpecialApprovedFiles'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedFiles.php';
+$wgAutoloadClasses['SpecialApprovedRevsQueryPage'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedRevsQueryPage.php';
+$wgAutoloadClasses['SpecialApprovedFilesQueryPage'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedFilesQueryPage.php';
+
+// special pages
 $wgSpecialPages['ApprovedRevs'] = 'SpecialApprovedRevs';
-$wgAutoloadClasses['SpecialApprovedRevs'] = $egApprovedRevsIP . 'SpecialApprovedRevs.php';
+$wgSpecialPages['ApprovedFiles'] = 'SpecialApprovedFiles';
 $wgSpecialPageGroups['ApprovedRevs'] = 'pages';
+$wgSpecialPageGroups['ApprovedFiles'] = 'pages';
 
 // hooks
 $wgHooks['ArticleEditUpdates'][] = 'ApprovedRevsHooks::updateLinksAfterEdit';

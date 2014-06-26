@@ -3,12 +3,22 @@
 class SpecialApprovedRevsQueryPage extends QueryPage {
 
 	protected $mMode;
+	protected $header_links;
+	protected $page_title_message = 'approvedrevs-specialapprovedpages';
 
 	public function __construct( $mode ) {
 		if ( $this instanceof SpecialPage ) {
 			parent::__construct( 'ApprovedRevs' );
 		}
 		$this->mMode = $mode;
+		$this->header_links = array(
+			'approvedrevs-notlatestpages'     => '', // was 'notlatest'
+			'approvedrevs-unapprovedpages'    => 'unapproved', 
+			'approvedrevs-approvedpages'      => 'all', // was '' (empty string)
+			'approvedrevs-grandfatheredpages' => 'grandfathered',
+		);
+		$this->other_special_page = 'ApprovedFiles';
+		$this->other_special_page_msg = 'approvedrevs-specialapprovedfiles';
 	}
 
 	function getName() {
@@ -17,38 +27,41 @@ class SpecialApprovedRevsQueryPage extends QueryPage {
 
 	public function execute ( $query ) {
 		parent::execute( $query );
-		$this->getOutput()->setPageTitle( wfMessage('approvedrevs-specialapprovedpages')->text() );
+		$this->getOutput()->setPageTitle( wfMessage( $this->page_title_message )->text() );
 	}
 
 	function isExpensive() { return false; }
 
 	function isSyndicated() { return false; }
 
+	// FIXME: someday in the future when MW requires PHP 5.4, move this
+	// into a trait so both special page classes are sourced from it.
 	function getPageHeader() {
-		// show the names of the four lists of pages, with the one
-		// corresponding to the current "mode" not being linked
 
-		$navLine = wfMsg( 'approvedrevs-view' ) . ' ';
-		
-		$links_messages = array( // pages
-			'approvedrevs-notlatestpages'     => '', // was 'notlatest'
-			'approvedrevs-unapprovedpages'    => 'unapproved', 
-			'approvedrevs-approvedpages'      => 'allpages', // was '' (empty string)
-			'approvedrevs-grandfatheredpages' => 'grandfathered',
-		);
-		
-		$navLinks = array();
-		foreach($links_messages as $msg => $query_param) {
-			$navLinks[] = $this->createHeaderLink($msg, $query_param);
+		// show the names of the four lists of pages, with the one
+		// corresponding to the current "mode" not being linked		
+		$navLinks = '';
+		foreach($this->header_links as $msg => $query_param) {
+			$navLinks .= '<li>' . $this->createHeaderLink($msg, $query_param) . '</li>';
 		}
-		$navLine .= implode(' | ', $navLinks);
-		
-		$out = Xml::tags( 'p', null, $navLine ) . "\n";
-		if ( $this->mMode == 'grandfathered' || $this->mMode == 'grandfatheredfiles' )
-			return $out . Xml::tags( 
+
+		$header = wfMessage( 'approvedrevs-view' )->text() . ' ';
+		$header .= Xml::tags( 'ul', null, $navLinks ) . "\n";
+
+
+		if ( $this->mMode == 'grandfathered' )
+			$header .= Xml::tags( 
 				'p', array('style'=>'font-style:italic;'), wfMessage('approvedrevs-grandfathered-description')->parse() );
-		else
-			return $out;
+
+		$out = Xml::tags('div', array('class'=>'specialapprovedrevs-header'), $header);
+
+
+		return '<small>' . wfMessage('approvedrevs-seealso')->text() . ': ' . Xml::element( 'a',
+				array( 'href' => SpecialPage::getTitleFor( $this->other_special_page )->getLocalURL() ),
+				wfMessage( $this->other_special_page_msg )->text()
+			) . '</small>' . $out;
+
+
 	}
 
 	function createHeaderLink($msg, $query_param) {
@@ -129,7 +142,7 @@ class SpecialApprovedRevsQueryPage extends QueryPage {
 		#	ALLPAGES: all approved pages
 		#	also includes $this->mMode == 'grandfathered', see formatResult()
 		#
-		if ( $this->mMode == 'allpages' ) {
+		if ( $this->mMode == 'all' ) {
 
 			$conds = $bannedNS; // get everything from approved_revs table
 			// keep default: $conds = "$namespacesString (pp_propname = 'approvedrevs' AND pp_value = 'y')";

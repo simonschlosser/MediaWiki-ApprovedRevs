@@ -29,3 +29,8 @@ tr.approved-revision td:first-child {
 tr.approved-revision td:last-child {
 	border-right: solid green 2px !important;
 }
+.specialapprovedrevs-header{
+	background-color:#ddd;
+	border:solid #aaa 1px;
+	padding: 3px 8px;
+}

@@ -107,7 +107,7 @@ $wgPageProps['approvedrevs'] = 'Whether or not the page is approvable';
 
 // ResourceLoader modules
 $wgResourceModules['ext.ApprovedRevs'] = array(
-	'styles' => 'ApprovedRevs.css',
+	'styles' => 'skins/ApprovedRevs.css',
 	'localBasePath' => __DIR__,
 	'remoteExtPath' => 'ApprovedRevs'
 );

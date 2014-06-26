@@ -3,40 +3,23 @@
 class SpecialApprovedFilesQueryPage extends SpecialApprovedRevsQueryPage {
 
 	static $repo = null;
+	public $page_title_message = 'approvedrevs-specialapprovedfiles';
+
+	public function __construct ($mode) {
+		parent::__construct($mode);
+
+		$this->header_links = array( // files
+			'approvedrevs-notlatestfiles'     => '', // was 'notlatestfiles', but is now default
+			'approvedrevs-unapprovedfiles'    => 'unapproved',
+			'approvedrevs-approvedfiles'      => 'allapproved',
+			'approvedrevs-grandfatheredfiles' => 'grandfathered',
+		);
+		$this->other_special_page = 'ApprovedRevs';
+		$this->other_special_page_msg = 'approvedrevs-specialapprovedpages';
+	}
 
 	function getName() {
 		return 'ApprovedFiles';
-	}
-
-	public function execute ( $query ) {
-		parent::execute( $query );
-		$this->getOutput()->setPageTitle( wfMessage('approvedrevs-specialapprovedfiles')->text() );
-	}
-
-	function getPageHeader() {
-		// show the names of the four lists of pages, with the one
-		// corresponding to the current "mode" not being linked
-
-		$navLine = wfMsg( 'approvedrevs-viewfiles' ) . ' ';
-		
-		$links_messages = array( // files
-			'approvedrevs-notlatestfiles'     => '', // was 'notlatestfiles', but is now default
-			'approvedrevs-unapprovedfiles'    => 'unapprovedfiles',
-			'approvedrevs-approvedfiles'      => 'allfiles',
-			'approvedrevs-grandfatheredfiles' => 'grandfatheredfiles',
-		);
-		$navLinks = array();
-		foreach($links_messages as $msg => $query_param) {
-			$navLinks[] = $this->createHeaderLink($msg, $query_param);
-		}
-		$navLine .= implode(' | ', $navLinks);
-
-		$out = Xml::tags( 'p', null, $navLine ) . "\n";
-		if ( $this->mMode == 'grandfathered' || $this->mMode == 'grandfatheredfiles' )
-			return $out . Xml::tags( 
-				'p', array('style'=>'font-style:italic;'), wfMessage('approvedrevs-grandfathered-description')->parse() );
-		else
-			return $out;
 	}
 
 
@@ -72,14 +55,14 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedRevsQueryPage {
 		#	ALLFILES: list all approved pages
 		#   also includes $this->mMode == 'grandfathered', see formatResult()
 		#
-		if ( $this->mMode == 'allfiles' ) {
+		if ( $this->mMode == 'all' ) {
 
 			$conds = "p.page_namespace=". NS_FILE; // get everything from approved_revs table
 		
 		#
 		#	UNAPPROVED
 		#
-		} elseif ( $this->mMode == 'unapprovedfiles' ) {
+		} elseif ( $this->mMode == 'unapproved' ) {
 
 			$tables['c'] = 'categorylinks';
 			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=c.cl_from' );
@@ -105,7 +88,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedRevsQueryPage {
 		#
 		#	GRANDFATHERED
 		#
-		} else if ( $this->mMode == 'grandfatheredfiles' ) {
+		} else if ( $this->mMode == 'grandfathered' ) {
 			
 			$tables['c'] = 'categorylinks';
 			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=c.cl_from' );

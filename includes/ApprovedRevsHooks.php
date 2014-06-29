@@ -758,6 +758,11 @@ class ApprovedRevsHooks {
 			$general_section->addRow( $extensions_row );
 		}
 		$extensions_row->addItem( ALItem::newFromSpecialPage( 'ApprovedRevs' ) );
+		$extensions_row->addItem( ALItem::newFromSpecialPage( 'ApprovedFiles' ) );
+		$extensions_row->addItem( ALItem::newFromPage(
+			'MediaWiki:Approvedrevs-permissions',
+			wfMessage('Approvedrevs-permissions-title')->text()
+		) );
 		return true;
 	}
 

@@ -12,7 +12,7 @@ if ( !defined( 'MEDIAWIKI' ) ) die();
 define( 'APPROVED_REVS_VERSION', '1.0.0' );
 
 // credits
-$wgExtensionCredits['other'][] = array(
+$GLOBALS['GLOBALS']['wgExtensionCredits']['other'][] = array(
 	'path'            => __FILE__,
 	'name'            => 'Approved Revs',
 	'version'         => APPROVED_REVS_VERSION,
@@ -22,91 +22,91 @@ $wgExtensionCredits['other'][] = array(
 );
 
 // global variables
-$egApprovedRevsIP = __DIR__ . '/';
-$egApprovedRevsNamespaces = array( NS_MAIN, NS_USER, NS_PROJECT, NS_TEMPLATE, NS_HELP );
-$egApprovedRevsSelfOwnedNamespaces = array();
-$egApprovedRevsBlankIfUnapproved = false;
-$egApprovedRevsAutomaticApprovals = true;
-$egApprovedRevsShowApproveLatest = false;
-$egApprovedRevsShowNotApprovedMessage = false;
+$GLOBALS['GLOBALS']['egApprovedRevsIP'] = __DIR__ . '/';
+$GLOBALS['egApprovedRevsNamespaces'] = array( NS_MAIN, NS_USER, NS_PROJECT, NS_TEMPLATE, NS_HELP );
+$GLOBALS['egApprovedRevsSelfOwnedNamespaces'] = array();
+$GLOBALS['egApprovedRevsBlankIfUnapproved'] = false;
+$GLOBALS['egApprovedRevsAutomaticApprovals'] = true;
+$GLOBALS['egApprovedRevsShowApproveLatest'] = false;
+$GLOBALS['egApprovedRevsShowNotApprovedMessage'] = false;
 
 // internationalization
-$wgMessagesDirs['ApprovedRevs'] = $egApprovedRevsIP . 'i18n';
-$wgExtensionMessagesFiles['ApprovedRevs'] = $egApprovedRevsIP . 'languages/ApprovedRevs.i18n.php';
-$wgExtensionMessagesFiles['ApprovedRevsAlias'] = $egApprovedRevsIP . 'languages/ApprovedRevs.alias.php';
-$wgExtensionMessagesFiles['ApprovedRevsMagic'] = $egApprovedRevsIP . 'languages/ApprovedRevs.i18n.magic.php';
+$GLOBALS['wgMessagesDirs']['ApprovedRevs'] = $GLOBALS['egApprovedRevsIP'] . 'i18n';
+$GLOBALS['wgExtensionMessagesFiles']['ApprovedRevs'] = $GLOBALS['egApprovedRevsIP'] . 'languages/ApprovedRevs.i18n.php';
+$GLOBALS['wgExtensionMessagesFiles']['ApprovedRevsAlias'] = $GLOBALS['egApprovedRevsIP'] . 'languages/ApprovedRevs.alias.php';
+$GLOBALS['wgExtensionMessagesFiles']['ApprovedRevsMagic'] = $GLOBALS['egApprovedRevsIP'] . 'languages/ApprovedRevs.i18n.magic.php';
 
 // autoload classes
-$wgAutoloadClasses['ApprovedRevs'] = $egApprovedRevsIP . 'includes/ApprovedRevs_body.php';
-$wgAutoloadClasses['ApprovedRevsHooks'] = $egApprovedRevsIP . 'includes/ApprovedRevsHooks.php';
-$wgAutoloadClasses['SpecialApprovedPages'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedPages.php';
-$wgAutoloadClasses['SpecialApprovedFiles'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedFiles.php';
-$wgAutoloadClasses['SpecialApprovedPagesQueryPage'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedPagesQueryPage.php';
-$wgAutoloadClasses['SpecialApprovedFilesQueryPage'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedFilesQueryPage.php';
+$GLOBALS['wgAutoloadClasses']['ApprovedRevs'] = $GLOBALS['egApprovedRevsIP'] . 'includes/ApprovedRevs_body.php';
+$GLOBALS['wgAutoloadClasses']['ApprovedRevsHooks'] = $GLOBALS['egApprovedRevsIP'] . 'includes/ApprovedRevsHooks.php';
+$GLOBALS['wgAutoloadClasses']['SpecialApprovedPages'] = $GLOBALS['egApprovedRevsIP'] . 'includes/specials/SpecialApprovedPages.php';
+$GLOBALS['wgAutoloadClasses']['SpecialApprovedFiles'] = $GLOBALS['egApprovedRevsIP'] . 'includes/specials/SpecialApprovedFiles.php';
+$GLOBALS['wgAutoloadClasses']['SpecialApprovedPagesQueryPage'] = $GLOBALS['egApprovedRevsIP'] . 'includes/specials/SpecialApprovedPagesQueryPage.php';
+$GLOBALS['wgAutoloadClasses']['SpecialApprovedFilesQueryPage'] = $GLOBALS['egApprovedRevsIP'] . 'includes/specials/SpecialApprovedFilesQueryPage.php';
 
 // special pages
-$wgSpecialPages['ApprovedPages'] = 'SpecialApprovedPages';
-$wgSpecialPages['ApprovedFiles'] = 'SpecialApprovedFiles';
-$wgSpecialPageGroups['ApprovedPages'] = 'pages';
-$wgSpecialPageGroups['ApprovedFiles'] = 'pages';
+$GLOBALS['wgSpecialPages']['ApprovedPages'] = 'SpecialApprovedPages';
+$GLOBALS['wgSpecialPages']['ApprovedFiles'] = 'SpecialApprovedFiles';
+$GLOBALS['wgSpecialPageGroups']['ApprovedPages'] = 'pages';
+$GLOBALS['wgSpecialPageGroups']['ApprovedFiles'] = 'pages';
 
 // hooks
-$wgHooks['ArticleEditUpdates'][] = 'ApprovedRevsHooks::updateLinksAfterEdit';
-$wgHooks['ArticleSaveComplete'][] = 'ApprovedRevsHooks::setLatestAsApproved';
-$wgHooks['ArticleSaveComplete'][] = 'ApprovedRevsHooks::setSearchText';
-$wgHooks['SearchResultInitFromTitle'][] = 'ApprovedRevsHooks::setSearchRevisionID';
-$wgHooks['PersonalUrls'][] = 'ApprovedRevsHooks::removeRobotsTag';
-$wgHooks['ArticleFromTitle'][] = 'ApprovedRevsHooks::showApprovedRevision';
-$wgHooks['ArticleAfterFetchContent'][] = 'ApprovedRevsHooks::showBlankIfUnapproved';
+$GLOBALS['wgHooks']['ArticleEditUpdates'][] = 'ApprovedRevsHooks::updateLinksAfterEdit';
+$GLOBALS['wgHooks']['ArticleSaveComplete'][] = 'ApprovedRevsHooks::setLatestAsApproved';
+$GLOBALS['wgHooks']['ArticleSaveComplete'][] = 'ApprovedRevsHooks::setSearchText';
+$GLOBALS['wgHooks']['SearchResultInitFromTitle'][] = 'ApprovedRevsHooks::setSearchRevisionID';
+$GLOBALS['wgHooks']['PersonalUrls'][] = 'ApprovedRevsHooks::removeRobotsTag';
+$GLOBALS['wgHooks']['ArticleFromTitle'][] = 'ApprovedRevsHooks::showApprovedRevision';
+$GLOBALS['wgHooks']['ArticleAfterFetchContent'][] = 'ApprovedRevsHooks::showBlankIfUnapproved';
 // MW 1.21+
-$wgHooks['ArticleAfterFetchContentObject'][] = 'ApprovedRevsHooks::showBlankIfUnapproved2';
-$wgHooks['DisplayOldSubtitle'][] = 'ApprovedRevsHooks::setSubtitle';
+$GLOBALS['wgHooks']['ArticleAfterFetchContentObject'][] = 'ApprovedRevsHooks::showBlankIfUnapproved2';
+$GLOBALS['wgHooks']['DisplayOldSubtitle'][] = 'ApprovedRevsHooks::setSubtitle';
 // it's 'SkinTemplateNavigation' for the Vector skin, 'SkinTemplateTabs' for
 // most other skins
-$wgHooks['SkinTemplateTabs'][] = 'ApprovedRevsHooks::changeEditLink';
-$wgHooks['SkinTemplateNavigation'][] = 'ApprovedRevsHooks::changeEditLinkVector';
-$wgHooks['PageHistoryBeforeList'][] = 'ApprovedRevsHooks::storeApprovedRevisionForHistoryPage';
-$wgHooks['PageHistoryLineEnding'][] = 'ApprovedRevsHooks::addApprovalLink';
-$wgHooks['UnknownAction'][] = 'ApprovedRevsHooks::setAsApproved';
-$wgHooks['UnknownAction'][] = 'ApprovedRevsHooks::unsetAsApproved';
-$wgHooks['BeforeParserFetchTemplateAndtitle'][] = 'ApprovedRevsHooks::setTranscludedPageRev';
-$wgHooks['ArticleDeleteComplete'][] = 'ApprovedRevsHooks::deleteRevisionApproval';
-$wgHooks['MagicWordwgVariableIDs'][] = 'ApprovedRevsHooks::addMagicWordVariableIDs';
-$wgHooks['ParserBeforeTidy'][] = 'ApprovedRevsHooks::handleMagicWords';
-$wgHooks['AdminLinks'][] = 'ApprovedRevsHooks::addToAdminLinks';
-$wgHooks['LoadExtensionSchemaUpdates'][] = 'ApprovedRevsHooks::describeDBSchema';
-$wgHooks['EditPage::showEditForm:initial'][] = 'ApprovedRevsHooks::addWarningToEditPage';
-$wgHooks['sfHTMLBeforeForm'][] = 'ApprovedRevsHooks::addWarningToSFForm';
-$wgHooks['ArticleViewHeader'][] = 'ApprovedRevsHooks::setArticleHeader';
-$wgHooks['ArticleViewHeader'][] = 'ApprovedRevsHooks::displayNotApprovedHeader';
+$GLOBALS['wgHooks']['SkinTemplateTabs'][] = 'ApprovedRevsHooks::changeEditLink';
+$GLOBALS['wgHooks']['SkinTemplateNavigation'][] = 'ApprovedRevsHooks::changeEditLinkVector';
+$GLOBALS['wgHooks']['PageHistoryBeforeList'][] = 'ApprovedRevsHooks::storeApprovedRevisionForHistoryPage';
+$GLOBALS['wgHooks']['PageHistoryLineEnding'][] = 'ApprovedRevsHooks::addApprovalLink';
+$GLOBALS['wgHooks']['UnknownAction'][] = 'ApprovedRevsHooks::setAsApproved';
+$GLOBALS['wgHooks']['UnknownAction'][] = 'ApprovedRevsHooks::unsetAsApproved';
+$GLOBALS['wgHooks']['BeforeParserFetchTemplateAndtitle'][] = 'ApprovedRevsHooks::setTranscludedPageRev';
+$GLOBALS['wgHooks']['ArticleDeleteComplete'][] = 'ApprovedRevsHooks::deleteRevisionApproval';
+$GLOBALS['wgHooks']['MagicWordwgVariableIDs'][] = 'ApprovedRevsHooks::addMagicWordVariableIDs';
+$GLOBALS['wgHooks']['ParserBeforeTidy'][] = 'ApprovedRevsHooks::handleMagicWords';
+$GLOBALS['wgHooks']['AdminLinks'][] = 'ApprovedRevsHooks::addToAdminLinks';
+$GLOBALS['wgHooks']['LoadExtensionSchemaUpdates'][] = 'ApprovedRevsHooks::describeDBSchema';
+$GLOBALS['wgHooks']['EditPage::showEditForm:initial'][] = 'ApprovedRevsHooks::addWarningToEditPage';
+$GLOBALS['wgHooks']['sfHTMLBeforeForm'][] = 'ApprovedRevsHooks::addWarningToSFForm';
+$GLOBALS['wgHooks']['ArticleViewHeader'][] = 'ApprovedRevsHooks::setArticleHeader';
+$GLOBALS['wgHooks']['ArticleViewHeader'][] = 'ApprovedRevsHooks::displayNotApprovedHeader';
 
 // Approved File Revisions
-$wgHooks['UnknownAction'][] = 'ApprovedRevsHooks::setFileAsApproved';
-$wgHooks['UnknownAction'][] = 'ApprovedRevsHooks::unsetFileAsApproved';
-$wgHooks['ImagePageFileHistoryLine'][] = 'ApprovedRevsHooks::onImagePageFileHistoryLine';
-$wgHooks['BeforeParserFetchFileAndTitle'][] = 'ApprovedRevsHooks::ModifyFileLinks';
-$wgHooks['ImagePageFindFile'][] = 'ApprovedRevsHooks::onImagePageFindFile';
-$wgHooks['FileDeleteComplete'][] = 'ApprovedRevsHooks::onFileDeleteComplete';
+$GLOBALS['wgHooks']['UnknownAction'][] = 'ApprovedRevsHooks::setFileAsApproved';
+$GLOBALS['wgHooks']['UnknownAction'][] = 'ApprovedRevsHooks::unsetFileAsApproved';
+$GLOBALS['wgHooks']['ImagePageFileHistoryLine'][] = 'ApprovedRevsHooks::onImagePageFileHistoryLine';
+$GLOBALS['wgHooks']['BeforeParserFetchFileAndTitle'][] = 'ApprovedRevsHooks::ModifyFileLinks';
+$GLOBALS['wgHooks']['ImagePageFindFile'][] = 'ApprovedRevsHooks::onImagePageFindFile';
+$GLOBALS['wgHooks']['FileDeleteComplete'][] = 'ApprovedRevsHooks::onFileDeleteComplete';
 
 
 // logging
-$wgLogTypes['approval'] = 'approval';
-$wgLogNames['approval'] = 'approvedrevs-logname';
-$wgLogHeaders['approval'] = 'approvedrevs-logdesc';
-$wgLogActions['approval/approve'] = 'approvedrevs-approveaction';
-$wgLogActions['approval/unapprove'] = 'approvedrevs-unapproveaction';
+$GLOBALS['wgLogTypes']['approval'] = 'approval';
+$GLOBALS['wgLogNames']['approval'] = 'approvedrevs-logname';
+$GLOBALS['wgLogHeaders']['approval'] = 'approvedrevs-logdesc';
+$GLOBALS['wgLogActions']['approval/approve'] = 'approvedrevs-approveaction';
+$GLOBALS['wgLogActions']['approval/unapprove'] = 'approvedrevs-unapproveaction';
 
 // user rights
-$wgAvailableRights[] = 'approverevisions'; // jamesmontalvo3: do we remove this or leave it behind even though it's not being used anymore?
-$wgGroupPermissions['sysop']['approverevisions'] = true; // jamesmontalvo3: do we remove this or leave it behind even though it's not being used anymore?
-$wgAvailableRights[] = 'viewlinktolatest';
-$wgGroupPermissions['*']['viewlinktolatest'] = true;
+$GLOBALS['wgAvailableRights'][] = 'approverevisions'; // jamesmontalvo3: do we remove this or leave it behind even though it's not being used anymore?
+$GLOBALS['wgGroupPermissions']['sysop']['approverevisions'] = true; // jamesmontalvo3: do we remove this or leave it behind even though it's not being used anymore?
+$GLOBALS['wgAvailableRights'][] = 'viewlinktolatest';
+$GLOBALS['wgGroupPermissions']['*']['viewlinktolatest'] = true;
 
 // page properties
-$wgPageProps['approvedrevs'] = 'Whether or not the page is approvable';
+$GLOBALS['wgPageProps']['approvedrevs'] = 'Whether or not the page is approvable';
 
 // ResourceLoader modules
-$wgResourceModules['ext.ApprovedRevs'] = array(
+$GLOBALS['wgResourceModules']['ext.ApprovedRevs'] = array(
 	'styles' => 'skins/ApprovedRevs.css',
 	'localBasePath' => __DIR__,
 	'remoteExtPath' => 'ApprovedRevs'

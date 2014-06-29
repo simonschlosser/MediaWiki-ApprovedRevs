@@ -1,0 +1,25 @@
+{
+	"name": "enterprisemediawiki/approved-revs",
+	"type": "mediawiki-extension",
+	"description": "A MediaWiki extension that lets users mark a certain revision of a page as approved",
+	"keywords": [
+		"MediaWiki"
+	],
+	"homepage": "https://www.mediawiki.org/wiki/Extension:Approved_Revs",
+	"license": "GPL",
+	"authors": [
+		{
+			"name": "Yaron Koren",
+			"role": "Author"
+		}
+	],
+	"support": {
+		"issues": "https://bugzilla.wikimedia.org/"
+	},
+	"require": {
+		"composer/installers": ">=1.0.1"
+	},
+	"autoload": {
+		"files": ["ApprovedRevs.php"]
+	}
+}

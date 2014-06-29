@@ -177,13 +177,13 @@ class ApprovedRevs {
 			if ($ts !== false) {
 				// only approvable because it already has an approved rev, not because it is in 
 				// message "approvedrev-permissions" 
-				$title->isGrandfatheredApprovable = true;
+				$title->isGrandfatheredApprovable = true; // FIXME: where is this used? change name.
 				return $title->isApprovable = true;
 			}
 		}
 		// if title in approved_revs table
 		else if ( self::getApprovedRevIDfromDB( $title->getArticleID() ) ) {
-			$title->isGrandfatheredApprovable = true;
+			$title->isGrandfatheredApprovable = true; // FIXME: where is this used? change name.
 			return $title->isApprovable = true;
 		}
 

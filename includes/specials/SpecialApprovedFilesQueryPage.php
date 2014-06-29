@@ -8,7 +8,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 		'approvedrevs-notlatestfiles'     => '', // was 'notlatestfiles', but is now default
 		'approvedrevs-unapprovedfiles'    => 'unapproved',
 		'approvedrevs-approvedfiles'      => 'allapproved',
-		'approvedrevs-grandfatheredfiles' => 'grandfathered',
+		'approvedrevs-undesignated-files' => 'undesignated',
 	);
 	protected $other_special_page = 'ApprovedPages';
 
@@ -42,7 +42,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 
 		#
 		#	ALLFILES: list all approved pages
-		#   also includes $this->mMode == 'grandfathered', see formatResult()
+		#   also includes $this->mMode == 'undesignated', see formatResult()
 		#
 		if ( $this->mMode == 'all' ) {
 
@@ -75,9 +75,9 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 			$conds = "ar.file_title IS NULL AND p.page_namespace=". NS_FILE . $conds;
 		
 		#
-		#	GRANDFATHERED
+		#	UNDESIGNATED
 		#
-		} else if ( $this->mMode == 'grandfathered' ) {
+		} else if ( $this->mMode == 'undesignated' ) {
 			
 			$tables['c'] = 'categorylinks';
 			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=c.cl_from' );
@@ -86,7 +86,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 			$perms = ApprovedRevs::getPermissions();
 			if ( in_array("File", $perms['Namespaces']) ) {
 				// if all files approvable should break out of this...since none can be 
-				// grandfathered if they're all approvable
+				// undesignated if they're all approvable
 				$conds = ' AND p.page_namespace=1 AND p.page_namespace=2'; // impossible condition, hack	
 			}
 			else {
@@ -133,9 +133,9 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 		
 		
 		#
-		#	Unapproved Files and Grandfathered Files
+		#	Unapproved Files and undesignated Files
 		#
-		if ( $this->mMode == 'unapprovedfiles' || $this->mMode == 'grandfatheredfiles' ) {
+		if ( $this->mMode == 'unapprovedfiles' || $this->mMode == 'undesignated' ) {
 			global $egApprovedRevsShowApproveLatest;
 			
 			$nsApproved = ApprovedRevs::titleInNamespacePermissions($title);
@@ -145,10 +145,10 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 			$magicApproved = ApprovedRevs::pageHasMagicWord($title);
 
 			
-			if ( $this->mMode == 'grandfathered' 
+			if ( $this->mMode == 'undesignated' 
 				&& ($nsApproved || $catsApproved || $pgApproved || $magicApproved) )
 			{
-				// if showing grandfathered pages only, don't show pages that have real approvability
+				// if showing undesignated pages only, don't show pages that have real approvability
 				return '';  
 			}
 			

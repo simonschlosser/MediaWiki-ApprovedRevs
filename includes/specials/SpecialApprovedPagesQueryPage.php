@@ -8,7 +8,7 @@ class SpecialApprovedPagesQueryPage extends QueryPage {
 		'approvedrevs-notlatestpages'     => '', // was 'notlatest'
 		'approvedrevs-unapprovedpages'    => 'unapproved', 
 		'approvedrevs-approvedpages'      => 'all', // was '' (empty string)
-		'approvedrevs-grandfatheredpages' => 'grandfathered',
+		'approvedrevs-undesignated-pages' => 'undesignated',
 	);
 	protected $other_special_page = 'ApprovedFiles';
 
@@ -42,9 +42,9 @@ class SpecialApprovedPagesQueryPage extends QueryPage {
 		$header .= Xml::tags( 'ul', null, $navLinks ) . "\n";
 
 
-		if ( $this->mMode == 'grandfathered' )
+		if ( $this->mMode == 'undesignated' )
 			$header .= Xml::tags( 
-				'p', array('style'=>'font-style:italic;'), wfMessage('approvedrevs-grandfathered-description')->parse() );
+				'p', array('style'=>'font-style:italic;'), wfMessage('approvedrevs-undesignated-description')->parse() );
 
 		$out = Xml::tags('div', array('class'=>'specialapprovedrevs-header'), $header);
 
@@ -133,7 +133,7 @@ class SpecialApprovedPagesQueryPage extends QueryPage {
 
 		#
 		#	ALLPAGES: all approved pages
-		#	also includes $this->mMode == 'grandfathered', see formatResult()
+		#	also includes $this->mMode == 'undesignated', see formatResult()
 		#
 		if ( $this->mMode == 'all' ) {
 
@@ -157,9 +157,9 @@ class SpecialApprovedPagesQueryPage extends QueryPage {
 			$conds  = "ar.page_id IS NULL AND ($conds) AND $bannedNS";		
 
 		#
-		#	GRANDFATHERED
+		#	UNDESIGNATED
 		#
-		} else if ( $this->mMode == 'grandfathered' ) {
+		} else if ( $this->mMode == 'undesignated' ) {
 
 			$tables['c'] = 'categorylinks';
 			$join_conds['p'] = array( 'LEFT OUTER JOIN', 'ar.page_id=p.page_id' );	// override	
@@ -222,7 +222,7 @@ class SpecialApprovedPagesQueryPage extends QueryPage {
 		
 		$pageLink = Linker::link( $title );
 
-		if ( $this->mMode == 'unapproved' || $this->mMode == 'grandfathered' ) {
+		if ( $this->mMode == 'unapproved' || $this->mMode == 'undesignated' ) {
 
 			global $egApprovedRevsShowApproveLatest;
 

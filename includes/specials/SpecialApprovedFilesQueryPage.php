@@ -1,6 +1,6 @@
 <?php
 
-class SpecialApprovedFilesQueryPage extends SpecialApprovedRevsQueryPage {
+class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 
 	static $repo = null;
 	public $page_title_message = 'approvedrevs-specialapprovedfiles';
@@ -14,8 +14,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedRevsQueryPage {
 			'approvedrevs-approvedfiles'      => 'allapproved',
 			'approvedrevs-grandfatheredfiles' => 'grandfathered',
 		);
-		$this->other_special_page = 'ApprovedRevs';
-		$this->other_special_page_msg = 'approvedrevs-specialapprovedpages';
+		$this->other_special_page = 'ApprovedPages';
 	}
 
 	function getName() {

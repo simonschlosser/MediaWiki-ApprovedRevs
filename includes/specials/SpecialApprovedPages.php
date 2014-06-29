@@ -6,13 +6,13 @@
  *
  * @author Yaron Koren
  */
-class SpecialApprovedRevs extends SpecialPage {
+class SpecialApprovedPages extends SpecialPage {
 
 	/**
 	 * Constructor
 	 */
 	function __construct() {
-		parent::__construct( 'ApprovedRevs' );
+		parent::__construct( 'ApprovedPages' );
 	}
 
 	function execute( $query ) {
@@ -20,7 +20,7 @@ class SpecialApprovedRevs extends SpecialPage {
 		ApprovedRevs::addCSS();
 		$this->setHeaders();
 
-		$rep = new SpecialApprovedRevsQueryPage( $this->getRequest()->getVal( 'show' ) );
+		$rep = new SpecialApprovedPagesQueryPage( $this->getRequest()->getVal( 'show' ) );
 
 		return $rep->execute( $query );
 

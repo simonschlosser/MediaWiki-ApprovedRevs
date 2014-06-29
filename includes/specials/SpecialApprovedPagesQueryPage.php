@@ -1,6 +1,6 @@
 <?php
 
-class SpecialApprovedRevsQueryPage extends QueryPage {
+class SpecialApprovedPagesQueryPage extends QueryPage {
 
 	protected $mMode;
 	protected $header_links;
@@ -8,7 +8,7 @@ class SpecialApprovedRevsQueryPage extends QueryPage {
 
 	public function __construct( $mode ) {
 		if ( $this instanceof SpecialPage ) {
-			parent::__construct( 'ApprovedRevs' );
+			parent::__construct( 'ApprovedPages' );
 		}
 		$this->mMode = $mode;
 		$this->header_links = array(
@@ -18,7 +18,6 @@ class SpecialApprovedRevsQueryPage extends QueryPage {
 			'approvedrevs-grandfatheredpages' => 'grandfathered',
 		);
 		$this->other_special_page = 'ApprovedFiles';
-		$this->other_special_page_msg = 'approvedrevs-specialapprovedfiles';
 	}
 
 	function getName() {
@@ -58,7 +57,7 @@ class SpecialApprovedRevsQueryPage extends QueryPage {
 
 		return '<small>' . wfMessage('approvedrevs-seealso')->text() . ': ' . Xml::element( 'a',
 				array( 'href' => SpecialPage::getTitleFor( $this->other_special_page )->getLocalURL() ),
-				wfMessage( $this->other_special_page_msg )->text()
+				wfMessage( strtolower($this->other_special_page) )->text()
 			) . '</small>' . $out;
 
 

@@ -39,15 +39,15 @@ $wgExtensionMessagesFiles['ApprovedRevsMagic'] = $egApprovedRevsIP . 'languages/
 // autoload classes
 $wgAutoloadClasses['ApprovedRevs'] = $egApprovedRevsIP . 'includes/ApprovedRevs_body.php';
 $wgAutoloadClasses['ApprovedRevsHooks'] = $egApprovedRevsIP . 'includes/ApprovedRevsHooks.php';
-$wgAutoloadClasses['SpecialApprovedRevs'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedRevs.php';
+$wgAutoloadClasses['SpecialApprovedPages'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedPages.php';
 $wgAutoloadClasses['SpecialApprovedFiles'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedFiles.php';
-$wgAutoloadClasses['SpecialApprovedRevsQueryPage'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedRevsQueryPage.php';
+$wgAutoloadClasses['SpecialApprovedPagesQueryPage'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedPagesQueryPage.php';
 $wgAutoloadClasses['SpecialApprovedFilesQueryPage'] = $egApprovedRevsIP . 'includes/specials/SpecialApprovedFilesQueryPage.php';
 
 // special pages
-$wgSpecialPages['ApprovedRevs'] = 'SpecialApprovedRevs';
+$wgSpecialPages['ApprovedPages'] = 'SpecialApprovedPages';
 $wgSpecialPages['ApprovedFiles'] = 'SpecialApprovedFiles';
-$wgSpecialPageGroups['ApprovedRevs'] = 'pages';
+$wgSpecialPageGroups['ApprovedPages'] = 'pages';
 $wgSpecialPageGroups['ApprovedFiles'] = 'pages';
 
 // hooks

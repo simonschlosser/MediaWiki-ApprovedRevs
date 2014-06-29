@@ -44,8 +44,8 @@
     "approvedrevs-historylabel": "&#9733; Approved Revision",
     "approvedrevs-approvedfile": "Approved file",
     "approvedrevs-latestfile": "Latest file",
-    "approvedrevs-specialapprovedpages" : "Approved Pages",
-    "approvedrevs-specialapprovedfiles" : "Approved Files",
+    "approvedpages": "Approved Pages",
+    "approvedfiles": "Approved Files",
     "right-approverevisions": "Set a certain revision of a wiki page as approved",
     "right-viewlinktolatest": "View explanatory text at the top of pages that have an approved revision"
 }

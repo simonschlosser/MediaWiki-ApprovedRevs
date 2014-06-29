@@ -64,13 +64,13 @@ class SpecialApprovedPagesQueryPage extends QueryPage {
 		if ( $this->mMode == $query_param ) {
 			return Xml::element( 'strong',
 				null,
-				wfMsg( $msg )
+				wfMessage( $msg )->text()
 			);
 		} else {
 			$show = ($query_param == '') ? array() : array( 'show' => $query_param );
 			return Xml::element( 'a',
 				array( 'href' => $approvedPagesTitle->getLocalURL( $show ) ),
-				wfMsg( $msg )
+				wfMessage( $msg )->text()
 			);
 		}
 

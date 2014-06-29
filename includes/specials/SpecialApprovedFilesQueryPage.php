@@ -164,7 +164,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 							)
 						)
 					),
-					wfMsg( 'approvedrevs-approve' )
+					wfMessage( 'approvedrevs-approve' )->text()
 				) . ')';
 			}
 			else $approveLink = '';
@@ -187,11 +187,11 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 			
 			$approvedLink = Xml::element( 'a',
 				array( 'href' => $approved_file->getUrl() ),
-				wfMsg( 'approvedrevs-approvedfile' )
+				wfMessage( 'approvedrevs-approvedfile' )->text()
 			);
 			$latestLink = Xml::element( 'a',
 				array( 'href' => $latest_file->getUrl() ),
-				wfMsg( 'approvedrevs-latestfile' )
+				wfMessage( 'approvedrevs-latestfile' )->text()
 			);
 			
 			return "$pageLink ($approvedLink | $latestLink)";
@@ -207,7 +207,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 					'class' => 
 						($result->approved_sha1 == $result->latest_sha1 && $result->approved_ts == $result->latest_ts) ? 'approvedRevIsLatest' : 'approvedRevNotLatest'
 				),
-				wfMsg( 'approvedrevs-revisionnumber', substr($result->approved_sha1, 0, 8) )
+				wfMessage( 'approvedrevs-revisionnumber', substr($result->approved_sha1, 0, 8) )->parse()
 			);
 
 			// Get data on the most recent approval from the

@@ -588,7 +588,7 @@ class ApprovedRevsHooks {
 				$classes[] = "approved-revision";
 			else
 				$classes = array("approved-revision");
-			$s = wfMsg( 'approvedrevs-historylabel' ) . '<br />' .  $s;
+			$s = wfMessage( 'approvedrevs-historylabel' )->text() . '<br />' .  $s;
 		}
 		if ( ApprovedRevs::userCanApprove( $title ) ) {
 			if ( $row->rev_id == $approvedRevID ) {
@@ -938,7 +938,7 @@ class ApprovedRevsHooks {
 			$rowClass .= "approved-revision";
 			
 			$pattern = "/<td[^>]+filehistory-selected+[^>]+>/";
-			$replace = "$0" . wfMsg( 'approvedrevs-historylabel' ) . "<br />";
+			$replace = "$0" . wfMessage( 'approvedrevs-historylabel' )->text() . "<br />";
 			$s = preg_replace($pattern, $replace, $s);
 		}
 		
@@ -947,12 +947,12 @@ class ApprovedRevsHooks {
 				$url = $file_title->getLocalUrl(
 					array( 'action' => 'unapprovefile' )
 				);
-				$msg = wfMsg( 'approvedrevs-unapprove' );
+				$msg = wfMessage( 'approvedrevs-unapprove' )->text();
 			} else {
 				$url = $file_title->getLocalUrl(
 					array( 'action' => 'approvefile', 'ts' => $row_timestamp, 'sha1' => $row_sha1 )
 				);
-				$msg = wfMsg( 'approvedrevs-approve' );
+				$msg = wfMessage( 'approvedrevs-approve' )->text();
 			}
 			$s .= '<td>' . Xml::element(
 				'a',
@@ -1082,7 +1082,7 @@ class ApprovedRevsHooks {
 		$wgOut->addHTML( "\t\t" . Xml::element(
 			'div',
 			array( 'class' => 'successbox' ),
-			wfMsg( 'approvedrevs-approvesuccess' )
+			wfMessage( 'approvedrevs-approvesuccess' )->text()
 		) . "\n" );
 		$wgOut->addHTML( "\t\t" . Xml::element(
 			'p',
@@ -1118,9 +1118,9 @@ class ApprovedRevsHooks {
 		// a blank right now or not
 		global $egApprovedRevsBlankIfUnapproved;
 		if ( $egApprovedRevsBlankIfUnapproved ) {
-			$successMsg = wfMsg( 'approvedrevs-unapprovesuccess2' );
+			$successMsg = wfMessage( 'approvedrevs-unapprovesuccess2' )->text();
 		} else {
-			$successMsg = wfMsg( 'approvedrevs-unapprovesuccess' );
+			$successMsg = wfMessage( 'approvedrevs-unapprovesuccess' )->text();
 		}
 
 		global $wgOut;

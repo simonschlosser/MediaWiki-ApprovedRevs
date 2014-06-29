@@ -515,10 +515,8 @@ class ApprovedRevs {
 	}
 
 	// Determines if username is the base pagename, e.g. if user is User:Jamesmontalvo3 then this 
-	// returns true for pages named Jamesmontalvo3, Jamesmontalvo3/My Subpage, User:Jamesmontalvo3,
-	// User:Jamesmontalvo3/Subpage
-	// This is for use with the "Self" keyword in approvedrevs-permissions. NOTE THAT THIS WORKS 
-	// OUTSIDE OF THE User NAMESPACE! This was not initially intended, but seems legitimate.
+	// returns true for pages named User:Jamesmontalvo3, User:Jamesmontalvo3/Subpage, etc
+	// This is for use with the "Self" keyword in approvedrevs-permissions.
 	public static function usernameIsBasePageName () {
 		global $wgUser, $wgTitle;
 

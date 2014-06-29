@@ -3,24 +3,14 @@
 class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 
 	static $repo = null;
-	public $page_title_message = 'approvedrevs-specialapprovedfiles';
-
-	public function __construct ($mode) {
-		parent::__construct($mode);
-
-		$this->header_links = array( // files
-			'approvedrevs-notlatestfiles'     => '', // was 'notlatestfiles', but is now default
-			'approvedrevs-unapprovedfiles'    => 'unapproved',
-			'approvedrevs-approvedfiles'      => 'allapproved',
-			'approvedrevs-grandfatheredfiles' => 'grandfathered',
-		);
-		$this->other_special_page = 'ApprovedPages';
-	}
-
-	function getName() {
-		return 'ApprovedFiles';
-	}
-
+	protected $specialpage = 'ApprovedFiles';
+	protected $header_links = array( // files
+		'approvedrevs-notlatestfiles'     => '', // was 'notlatestfiles', but is now default
+		'approvedrevs-unapprovedfiles'    => 'unapproved',
+		'approvedrevs-approvedfiles'      => 'allapproved',
+		'approvedrevs-grandfatheredfiles' => 'grandfathered',
+	);
+	protected $other_special_page = 'ApprovedPages';
 
 	#
 	#	FILE QUERY

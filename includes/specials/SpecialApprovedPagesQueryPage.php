@@ -3,30 +3,24 @@
 class SpecialApprovedPagesQueryPage extends QueryPage {
 
 	protected $mMode;
-	protected $header_links;
-	protected $page_title_message = 'approvedrevs-specialapprovedpages';
+	protected $specialpage = 'ApprovedPages';
+	protected $header_links = array(
+		'approvedrevs-notlatestpages'     => '', // was 'notlatest'
+		'approvedrevs-unapprovedpages'    => 'unapproved', 
+		'approvedrevs-approvedpages'      => 'all', // was '' (empty string)
+		'approvedrevs-grandfatheredpages' => 'grandfathered',
+	);
+	protected $other_special_page = 'ApprovedFiles';
 
 	public function __construct( $mode ) {
 		if ( $this instanceof SpecialPage ) {
-			parent::__construct( 'ApprovedPages' );
+			parent::__construct( $this->specialpage );
 		}
 		$this->mMode = $mode;
-		$this->header_links = array(
-			'approvedrevs-notlatestpages'     => '', // was 'notlatest'
-			'approvedrevs-unapprovedpages'    => 'unapproved', 
-			'approvedrevs-approvedpages'      => 'all', // was '' (empty string)
-			'approvedrevs-grandfatheredpages' => 'grandfathered',
-		);
-		$this->other_special_page = 'ApprovedFiles';
 	}
 
 	function getName() {
-		return 'ApprovedRevs';
-	}
-
-	public function execute ( $query ) {
-		parent::execute( $query );
-		$this->getOutput()->setPageTitle( wfMessage( $this->page_title_message )->text() );
+		return $this->specialpage;
 	}
 
 	function isExpensive() { return false; }

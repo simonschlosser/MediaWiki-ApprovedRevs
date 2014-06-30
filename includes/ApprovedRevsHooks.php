@@ -767,8 +767,9 @@ class ApprovedRevsHooks {
 	}
 
 	public static function describeDBSchema( $updater = null ) {
-		$dir = dirname( __FILE__ );
-
+		global $egApprovedRevsIP;
+		$dir = "$egApprovedRevsIP/maintenance";
+		
 		// DB updates
 		// For now, there's just a single SQL file for all DB types.
 		if ( $updater === null ) {

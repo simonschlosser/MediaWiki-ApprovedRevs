@@ -69,7 +69,10 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 				$conds = array();
 				if ($cat !== false) $conds[] = "(c.cl_to IN ($cat))";
 				if ($pg  !== false) $conds[] = "(p.page_id IN ($pg))";
-				$conds = ' AND (' . implode(' OR ', $conds) . ')';
+				if (count($conds)>0)
+					$conds = ' AND (' . implode(' OR ', $conds) . ')';
+				else
+					$conds = '';
 			}
 			
 			$conds = "ar.file_title IS NULL AND p.page_namespace=". NS_FILE . $conds;
@@ -95,8 +98,12 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 				// WAS: if ($cat !== false) $conds[] = "(c.cl_to NOT IN ($cat) OR c.cl_to IS NULL)";
 				if ($cat !== false) 
 					$conds[] = "p.page_id NOT IN (SELECT DISTINCT cl_from FROM categorylinks WHERE cl_to IN ($cat))";
-				if ($pg  !== false) $conds[] = "(p.page_id NOT IN ($pg))";
-				$conds = ' AND (' . implode(' AND ', $conds) . ')';
+				if ($pg  !== false)
+					$conds[] = "(p.page_id NOT IN ($pg))";
+				if (count($conds)>0)
+					$conds = ' AND (' . implode(' AND ', $conds) . ')';
+				else
+					$conds = '';
 			}
 			
 			$conds = "p.page_namespace=". NS_FILE . $conds;
@@ -135,7 +142,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 		#
 		#	Unapproved Files and undesignated Files
 		#
-		if ( $this->mMode == 'unapprovedfiles' || $this->mMode == 'undesignated' ) {
+		if ( $this->mMode == 'unapproved' || $this->mMode == 'undesignated' ) {
 			global $egApprovedRevsShowApproveLatest;
 			
 			$nsApproved = ApprovedRevs::titleInNamespacePermissions($title);

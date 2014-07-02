@@ -32,9 +32,9 @@ $GLOBALS['egApprovedRevsShowNotApprovedMessage'] = false;
 
 // internationalization
 $GLOBALS['wgMessagesDirs']['ApprovedRevs'] = $GLOBALS['egApprovedRevsIP'] . 'i18n';
-$GLOBALS['wgExtensionMessagesFiles']['ApprovedRevs'] = $GLOBALS['egApprovedRevsIP'] . 'languages/ApprovedRevs.i18n.php';
-$GLOBALS['wgExtensionMessagesFiles']['ApprovedRevsAlias'] = $GLOBALS['egApprovedRevsIP'] . 'languages/ApprovedRevs.alias.php';
-$GLOBALS['wgExtensionMessagesFiles']['ApprovedRevsMagic'] = $GLOBALS['egApprovedRevsIP'] . 'languages/ApprovedRevs.i18n.magic.php';
+$GLOBALS['wgExtensionMessagesFiles']['ApprovedRevs'] = $GLOBALS['egApprovedRevsIP'] . 'ApprovedRevs.i18n.php';
+$GLOBALS['wgExtensionMessagesFiles']['ApprovedRevsAlias'] = $GLOBALS['egApprovedRevsIP'] . 'ApprovedRevs.alias.php';
+$GLOBALS['wgExtensionMessagesFiles']['ApprovedRevsMagic'] = $GLOBALS['egApprovedRevsIP'] . 'ApprovedRevs.i18n.magic.php';
 
 // autoload classes
 $GLOBALS['wgAutoloadClasses']['ApprovedRevs'] = $GLOBALS['egApprovedRevsIP'] . 'includes/ApprovedRevs_body.php';

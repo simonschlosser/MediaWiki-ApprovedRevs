@@ -15,7 +15,10 @@ if ( !function_exists( 'wfJsonI18nShim823c3b92006b1243' ) ) {
 	function wfJsonI18nShim823c3b92006b1243( $cache, $code, &$cachedData ) {
 		$codeSequence = array_merge( array( $code ), $cachedData['fallbackSequence'] );
 		foreach ( $codeSequence as $csCode ) {
-			$fileName = dirname( __FILE__ ) . "/i18n/$csCode.json";
+			
+			// modified by jamesmontalvo3 since this file was moved
+			global $egApprovedRevsIP;
+			$fileName = "$egApprovedRevsIP/i18n/$csCode.json";
 			if ( is_readable( $fileName ) ) {
 				$data = FormatJson::decode( file_get_contents( $fileName ), true );
 				foreach ( array_keys( $data ) as $key ) {

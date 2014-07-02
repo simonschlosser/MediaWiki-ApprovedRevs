@@ -647,14 +647,13 @@ class ApprovedRevsHooks {
 			array( 'style' => 'clear: both' )
 		) . "\n" );
 
-		// Show the revision, instead of the history page.
-		if ( defined( 'SMW_VERSION' ) && version_compare( SMW_VERSION, '1.9', '<' ) ) {
-			// Call this only for SMW < 1.9 - it causes semantic
-			// data to not be set when using SMW 1.9 (a bug fixed
-			// in SMW 1.9.1), but thankfully it doesn't seem to be
-			// needed, in any case.
-			$article->doPurge();
-		}
+		// doPurge() causes semantic data to not be set when using SMW 1.9.0
+		// due to a bug in SMW. This was fixed in SMW 1.9.1. Approved Revs
+		// accounted for this bug in versions prior to v1.0.0 (see commits
+		// e80ac09f and c5370dd4), but doing so caused cache issues: the 
+		// history page would not show updated approvals without a hard
+		// refresh. *** Approved Revs now DOES NOT support SMW 1.9.0 ***
+		$article->doPurge();
 		$article->view();
 
 		return false;

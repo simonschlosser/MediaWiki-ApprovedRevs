@@ -281,13 +281,26 @@ class ApprovedRevs {
 				self::checkIfUserInPerms( $perms );
 
 		foreach ($permissions['Category Permissions'] as $cat => $perms) {
-			$cat = (  $inclusive = ($cat[0]==='+')  ) ? substr($cat, 1) : $cat;
+			if ($cat[0]==='+') {
+				$inclusive = true;
+				$cat = substr($cat, 1);
+			}
+			else {
+				$inclusive = false;
+			}
+
 			if ( in_array($cat, $page_cats) )
 				self::checkIfUserInPerms( $perms, $inclusive );
 		}
 		
 		foreach ($permissions['Page Permissions'] as $pg => $perms) {
-			$pg = (  $inclusive = ($pg[0]==='+')  ) ? substr($pg, 1) : $pg;
+			if ($pg[0]==='+') {
+				$inclusive = true;
+				$pg = substr($pg, 1);
+			}
+			else {
+				$inclusive = false;
+			}
 			if ($pg == $page_actual)
 				self::checkIfUserInPerms( $perms, $inclusive );
 		}
@@ -439,7 +452,7 @@ class ApprovedRevs {
 
 	public static function checkIfUserInPerms( $perms, $inclusive=false ) {
 		global $wgUser;
-		
+
 		// if this isn't going to overwrite other permissions, and other permissions say the user
 		// can approve, no need to check further
 		if ( $inclusive == true && self::$mUserCanApprove == true)

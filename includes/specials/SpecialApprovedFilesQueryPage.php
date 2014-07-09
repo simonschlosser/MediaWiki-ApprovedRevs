@@ -44,7 +44,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 		#	ALLFILES: list all approved pages
 		#   also includes $this->mMode == 'undesignated', see formatResult()
 		#
-		if ( $this->mMode == 'all' ) {
+		if ( $this->mMode == 'allapproved' ) {
 
 			$conds = "p.page_namespace=". NS_FILE; // get everything from approved_revs table
 		

@@ -981,12 +981,13 @@ class ApprovedRevsHooks {
 			
 			// Media link redirects don't get caught by the normal redirect check, so this
 			// extra check is required
-			if ( $temp = WikiPage::newFromID($file_title->getArticleID())->getRedirectTarget() ) {
+			$temp = WikiPage::newFromID( $file_title->getArticleID() );
+			if ( $temp && $temp->getRedirectTarget() ) {
 				$file_title = $temp;
-				unset($temp);
 			}
+			unset($temp);
 		}
-		
+
 		if ( $file_title->isRedirect() ) {
 			$page = WikiPage::newFromID( $file_title->getArticleID() );
 			$file_title = $page->getRedirectTarget();

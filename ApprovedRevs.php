@@ -107,6 +107,7 @@ $GLOBALS['wgPageProps']['approvedrevs'] = 'Whether or not the page is approvable
 
 // ResourceLoader modules
 $GLOBALS['wgResourceModules']['ext.ApprovedRevs'] = array(
+	'position' => 'bottom',
 	'styles' => 'skins/ApprovedRevs.css',
 	'localBasePath' => __DIR__,
 	'remoteExtPath' => 'ApprovedRevs'

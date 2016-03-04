@@ -251,7 +251,7 @@ class ApprovedRevsHooks {
 	 */
 	static function setOldSubtitle( $article, $revisionID ) {
 		$title = $article->getTitle(); # Added for ApprovedRevs - and removed hook
-		
+
 		$unhide = $article->getContext()->getRequest()->getInt( 'unhide' ) == 1;
 
 		// Cascade unhide param in links for easy deletion browsing.
@@ -360,7 +360,7 @@ class ApprovedRevsHooks {
 					'oldid' => $revisionID
 				) + $extraParams
 			);
-			
+
 		// Added for Approved Revs
 		$approved = ( $approvedID != null && $revisionID == $approvedID );
 		$approvedlink = $approved
@@ -650,7 +650,7 @@ class ApprovedRevsHooks {
 		// doPurge() causes semantic data to not be set when using SMW 1.9.0
 		// due to a bug in SMW. This was fixed in SMW 1.9.1. Approved Revs
 		// accounted for this bug in versions prior to v1.0.0 (see commits
-		// e80ac09f and c5370dd4), but doing so caused cache issues: the 
+		// e80ac09f and c5370dd4), but doing so caused cache issues: the
 		// history page would not show updated approvals without a hard
 		// refresh. *** Approved Revs now DOES NOT support SMW 1.9.0 ***
 		$article->doPurge();
@@ -768,7 +768,7 @@ class ApprovedRevsHooks {
 	public static function describeDBSchema( $updater = null ) {
 		global $egApprovedRevsIP;
 		$dir = "$egApprovedRevsIP/maintenance";
-		
+
 		// DB updates
 		// For now, there's just a single SQL file for all DB types.
 		if ( $updater === null ) {
@@ -888,7 +888,7 @@ class ApprovedRevsHooks {
 		if ( !$egApprovedRevsShowNotApprovedMessage) {
 			return true;
 		}
- 
+
 		$title = $article->getTitle();
 		if ( ! ApprovedRevs::hasApprovedRevision( $title ) ) {
 			$text = wfMessage( 'approvedrevs-noapprovedrevision' )->text();
@@ -899,13 +899,13 @@ class ApprovedRevsHooks {
 				$wgOut->setSubtitle( $text );
 			}
 		}
- 
+
 		return true;
 	}
 
 
 	/**
-	 *  On image pages (pages in NS_FILE), modify each line in the file history (file history, not 
+	 *  On image pages (pages in NS_FILE), modify each line in the file history (file history, not
 	 *  history of wikitext on file page). Add "approved-revision" class to the appropriate row. For
 	 *  users with approve permissions on this page add "approve" and "unapprove" links as required.
 	 *
@@ -919,7 +919,7 @@ class ApprovedRevsHooks {
 		if ( ! ApprovedRevs::mediaIsApprovable( $file_title ) ) { // FIXME: pageIsApprovable needs to return true if approved rev exists
 			return true;
 		}
-		
+
 		$row_timestamp = $file->getTimestamp();
 		$row_sha1 = $file->getSha1();
 
@@ -930,18 +930,18 @@ class ApprovedRevsHooks {
 		// apply class to row of approved revision
 		// Note: both here and below in the "userCanApprove" section, if the timestamp condition is
 		// removed then all rows with the same sha1 as the approved rev will be given the class
-		// "approved-revision", and highlighted. Only the actual approved rev will be given the 
-		// message approvedrevs-historylabel, though. 
+		// "approved-revision", and highlighted. Only the actual approved rev will be given the
+		// message approvedrevs-historylabel, though.
 		if ( $row_sha1 == $approvedRev_sha1 && $row_timestamp == $approvedRev_ts ) {
 			if ( $rowClass )
 				$rowClass .= ' ';
 			$rowClass .= "approved-revision";
-			
+
 			$pattern = "/<td[^>]+filehistory-selected+[^>]+>/";
 			$replace = "$0" . wfMessage( 'approvedrevs-historylabel' )->text() . "<br />";
 			$s = preg_replace($pattern, $replace, $s);
 		}
-		
+
 		if ( ApprovedRevs::userCanApprove( $file_title ) ) {
 			if ( $row_sha1 == $approvedRev_sha1 && $row_timestamp == $approvedRev_ts ) {
 				$url = $file_title->getLocalUrl(
@@ -963,13 +963,13 @@ class ApprovedRevsHooks {
 		return true;
 
 	}
-		
+
 	/**
 	 *  Called on BeforeParserFetchFileAndTitle hook
 	 *  Changes links and thumbnails of files to point to the approved revision in all cases except
 	 *  the primary file on file pages (e.g. the big image in the top left on File:My File.png). To
 	 *  modify that image see self::onImagePageFindFile()
-	 *  
+	 *
 	 *  FIXME: this doesn't appear to be working for redirected files
 	 **/
 	public static function ModifyFileLinks ( $parser, Title $file_title, &$options, &$query ) {
@@ -978,12 +978,12 @@ class ApprovedRevsHooks {
 		if ( $file_title->getNamespace() == NS_MEDIA ) {
 			$file_title = Title::makeTitle( NS_FILE, $file_title->getDBkey() );
 			$file_title->resetArticleId( $file_title->getArticleID() ); // avoid extra queries
-			
+
 			// Media link redirects don't get caught by the normal redirect check, so this
 			// extra check is required
 			$temp = WikiPage::newFromID( $file_title->getArticleID() );
 			if ( $temp && $temp->getRedirectTarget() ) {
-				$file_title = $temp;
+				$file_title = $temp->getTitle();
 			}
 			unset($temp);
 		}
@@ -996,15 +996,15 @@ class ApprovedRevsHooks {
 
 		# Tell Parser what file version to use
 		list( $approvedRev_ts, $approvedRev_sha1 ) = ApprovedRevs::GetApprovedFileInfo( $file_title );
-		
+
 		// no valid approved timestamp or sha1, so don't modify image or image link
 		if ( (! $approvedRev_ts) || (! $approvedRev_sha1) ) {
 			return true;
 		}
-		
+
 		$options['time'] = wfTimestampOrNull( TS_MW, $approvedRev_ts );
 		$options['sha1'] = $approvedRev_sha1;
-		
+
 		// $options['broken'] = true; // breaks the link? was in FlaggedRevs...why would we want to do this?
 
 		# Stabilize the file link: this was from FlaggedRevs, and I'm not really sure what it does
@@ -1015,24 +1015,24 @@ class ApprovedRevsHooks {
 
 		return true;
 	}
-	
+
 	/**
 	 *  Applicable on image pages only, this changes the primary image on the page
 	 *  from the most recent to the approved revision.
 	 **/
 	public static function onImagePageFindFile ( $imagePage, &$normalFile, &$displayFile ) {
-		
+
 		// if ($normalFile)
 			// $normalFile->purgeCache();
 		// if ($displayFile)
 			// $displayFile->purgeCache();
-	
+
 		list( $approvedRev_ts, $approvedRev_sha1 ) = ApprovedRevs::GetApprovedFileInfo( $imagePage->getFile()->getTitle() );
 		if ( (! $approvedRev_ts) || (! $approvedRev_sha1) )
 			return true;
-		
+
 		$title = $imagePage->getTitle();
-		
+
 		$displayFile = wfFindFile( $title, array( 'time' => $approvedRev_ts ) );
 		# If none found, try current
 		if ( !$displayFile ) {
@@ -1076,7 +1076,7 @@ class ApprovedRevsHooks {
 			die('check query string'); return true;
 		}
 		$revisionID = $wgRequest->getVal( 'ts' );
-		ApprovedRevs::SetApprovedFileInDB( 
+		ApprovedRevs::SetApprovedFileInDB(
 			$title, $wgRequest->getVal( 'ts' ), $wgRequest->getVal( 'sha1' ) );
 
 		global $wgOut;
@@ -1143,7 +1143,7 @@ class ApprovedRevsHooks {
 	}
 
 	/**
-	 *	If a file is deleted, check if the sha1 (and timestamp?) exist in the 
+	 *	If a file is deleted, check if the sha1 (and timestamp?) exist in the
 	 *  approved_revs_files table, and delete that row accordingly. A deleted
 	 *  version of a file should not be the approved version!
 	 *
@@ -1153,7 +1153,7 @@ class ApprovedRevsHooks {
 	 *     Compare UnsetApprovedFileInDB() and UnsetApprovedFile()
 	 **/
 	public static function onFileDeleteComplete ( File $file, $oldimage, $article, $user, $reason ) {
-	
+
 		$dbr = wfGetDB( DB_SLAVE );
 		// check if this file has an approved revision
 		$approved_file = $dbr->selectRow(
@@ -1161,16 +1161,16 @@ class ApprovedRevsHooks {
 			array('approved_timestamp','approved_sha1'),
 			array( 'file_title' => $file->getTitle()->getDBkey() )
 		);
-		
+
 		// If an approved revision exists, loop through all files in history.
 		// Since this hook happens AFTER deletion (there is no hook before deletion), check to see
 		// if the sha1 of the approved revision is NOT in the history. If it is not in the history,
 		// then it has no business being in the approved_revs_files table, and should be deleted.
 		if ( $approved_file ) {
-			
+
 			$revs = array();
 			$approved_exists = false;
-			
+
 			$hist = $file->getHistory();
 			foreach($hist as $OldLocalFile) {
 				// need to check both sha1 and timestamp, since reverted files can have the same
@@ -1180,39 +1180,39 @@ class ApprovedRevsHooks {
 				{
 					$approved_exists = true;
 				}
-				
+
 			}
 
 			if ( ! $approved_exists )
 				ApprovedRevs::UnsetApprovedFileInDB( $file->getTitle() );
-			
+
 		}
-		
+
 		return true;
 	}
 
-	
+
 	/*NOT SURE IF THIS IS NECESSARY FOR ANYTHING...
 	$wgHooks['ImageOpenShowImageInlineBefore'][] = 'ApprovedRevsHooks::onImageOpenShowImageInlineBefore';
 	public static function onImageOpenShowImageInlineBefore ( &$imagePage, &$out ) {
 
 		list( $approvedRev_ts, $approvedRev_sha1 ) = ApprovedRevs::GetApprovedFileInfo( $imagePage->getFile() );
 		$hist = $imagePage->getFile()->getHistory();
-		
+
 		// there's probably a faster way to do this than to loop through all existing files, but
 		// I couldn't find it. Seems like you should be able to do something like
 		// $imagePage->getFile()->getFromHash( $sha1 ) or something
 		// --User:Jamesmontalvo3 2013OCT18
-		foreach($hist as $file) { 
+		foreach($hist as $file) {
 			if ( $file->getSha1()==$approvedRev_sha1 && $file->getTimestamp()==$approvedRev_ts ) {
 				$imagePage->setFile( $file );
 				return true;
 			}
 		}
-		
+
 		// if no approved rev found, return true and stick with the most recent
 		return true;
 	}
 	*/
-	
+
 }

@@ -577,7 +577,7 @@ class ApprovedRevs {
 	public static function smwPropertyEqualsCurrentUser ( $userProperty ) {
 		global $wgTitle, $wgUser;
 				
-		if ( ! class_exists('SMWHooks') ) // if semantic not installed
+		if ( ! defined( 'SMW_VERSION' ) ) // if semantic not installed
 			die('Semantic MediaWiki must be installed to use the ApprovedRevs "Property" definition.');
 		else {	
 			$valueDis = smwfGetStore()->getPropertyValues( 

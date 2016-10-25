@@ -698,11 +698,13 @@ class ApprovedRevs {
 
 		// using array of categories from $perms, create array of category
 		// names in the same form as categorylinks.cl_to
-		// FIXME: is mysql_real_escape_string the way to go? of does MW have something built in?
 		$catCols = array();
 		foreach($perms['Categories'] as $cat) {
 			$catObj = Category::newFromName( $cat );
-			$catCols[] = "'" . mysql_real_escape_string($catObj->getName()) . "'";
+			// FIXME: replaced mysql_real_escape_string with addcslashes with escaping on \, " and '
+			// mysql_real_escape_string also escapes \x00, \n, \r and \x1a. Do we need these? Not
+			// likely since $catObj is constructed from Category::newFromName.
+                        $catCols[] = "'" . addcslashes($catObj->getName(), "\\\"'") . "'";
 		}
 
 		$pgIDs = array();

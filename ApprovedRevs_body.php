@@ -686,7 +686,7 @@ class ApprovedRevs {
 
 	public static function smwPropertyEqualsCurrentUser ( $userProperty ) {
 
-		if ( ! class_exists( 'SMWHooks' ) ) {
+		if ( ! defined( 'SMW_VERSION' ) ) {
 			return false; // SMW not installed, return false to ignore
 		}
 		else {
@@ -850,8 +850,10 @@ class ApprovedRevs {
 			// cannot use category IDs like with pages and namespaces. Instead
 			// need to create database-safe SQL column names. Columns in same
 			// form as categorylinks.cl_to
-			$dbSafeCategoryNames[] = "'" .
-				mysql_real_escape_string( $mwCategoryObject->getName() ) . "'";
+			// FIXME: replaced mysql_real_escape_string with addcslashes with escaping on \, " and '
+			// mysql_real_escape_string also escapes \x00, \n, \r and \x1a. Do we need these? Not
+			// likely since $mwCategoryObject is constructed from Category::newFromName.
+			$dbSafeCategoryNames[] = "'" . addcslashes( $mwCategoryObject->getName(), "\\\"'" ) . "'";
 		}
 		$dbSafeCategoryNamesString = implode( ',', $dbSafeCategoryNames );
 

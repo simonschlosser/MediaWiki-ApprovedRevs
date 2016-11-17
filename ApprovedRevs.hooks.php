@@ -105,12 +105,12 @@ class ApprovedRevsHooks {
 			return true;
 		}
 
-		if ( !ApprovedRevs::pageIsApprovable( $title ) ) {
+		if ( ! ApprovedRevs::pageIsApprovable( $title ) ) {
 			return true;
 		}
 
 		global $egApprovedRevsBlankIfUnapproved;
-		if ( !$egApprovedRevsBlankIfUnapproved ) {
+		if ( ! $egApprovedRevsBlankIfUnapproved ) {
 			$approvedRevID = ApprovedRevs::getApprovedRevID( $title );
 			if ( empty( $approvedRevID ) ) {
 				return true;

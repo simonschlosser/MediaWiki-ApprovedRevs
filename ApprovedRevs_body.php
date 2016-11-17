@@ -188,11 +188,10 @@ class ApprovedRevs {
 		$perms = self::getPermissions();
 
 		// title in namespace permissions
-		if (
-			in_array(
+		if ( in_array(
 				$title->getNamespace(),
-				array_keys( $perms['Namespace Permissions'] ) )
-		) {
+				array_keys( $perms['Namespace Permissions'] )
+		) ) {
 			return true;
 		}
 
@@ -208,20 +207,18 @@ class ApprovedRevs {
 		}
 
 		// title in page permissions and is in main namespace
-		if (
-			in_array( $title->getText(),
-				array_keys( $perms['Page Permissions'] ) )
-		) {
+		if ( in_array(
+			$title->getText(),
+			array_keys( $perms['Page Permissions'] )
+		) ) {
 			return true;
 		}
 
 		// title in page permissions in another namespace
-		else if (
-			in_array(
-				$title->getNsText() . ':' . $title->getText(),
-				array_keys( $perms['Page Permissions'] )
-			)
-		) {
+		else if ( in_array(
+			$title->getNsText() . ':' . $title->getText(),
+			array_keys( $perms['Page Permissions'] )
+		) ) {
 			return true;
 		}
 
@@ -554,7 +551,7 @@ class ApprovedRevs {
 	 * $whoCanApprove is like:
 	 * array(
 	 * 		'group' => array('editors', 'management'),
-	 * 		'user' => 'John',
+	 * 		'user' => array('John'),
 	 * 		'creator' => true,
 	 * 		'property' => 'Subject matter expert',
 	 * 		'override' => false // <-- this is irrelevant within this function

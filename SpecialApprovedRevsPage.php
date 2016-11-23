@@ -9,69 +9,76 @@
 class SpecialApprovedRevsPage extends QueryPage {
 
 	protected $mMode;
+	protected $specialpage = 'ApprovedRevs';
+	protected $header_links = array(
+		'approvedrevs-notlatestpages'     => '', // was 'notlatest'
+		'approvedrevs-unapprovedpages'    => 'unapproved',
+		'approvedrevs-approvedpages'      => 'all', // was '' (empty string)
+		'approvedrevs-invalid-pages' => 'invalid',
+	);
 
 	public function __construct( $mode ) {
 		if ( $this instanceof SpecialPage ) {
-			parent::__construct( 'ApprovedRevs' );
+			parent::__construct( $this->specialpage );
 		}
 		$this->mMode = $mode;
 	}
 
 	function getName() {
-		return 'ApprovedRevs';
+		return $this->specialpage;
 	}
 
 	function isExpensive() { return false; }
 
 	function isSyndicated() { return false; }
 
+	// When MW 1.23 is no longer supported, and thus MW requires PHP 5.4 or
+	// later, move this into a trait so multiple special page classes can be
+	// sourced from it. (Note: future patch will include Special:ApprovedFiles)
 	function getPageHeader() {
-		// show the names of the three lists of pages, with the one
+
+		// show the names of the four lists of pages, with the one
 		// corresponding to the current "mode" not being linked
-		$approvedPagesTitle = SpecialPage::getTitleFor( 'ApprovedRevs' );
-		$navLine = wfMessage( 'approvedrevs-view' )->parse() . ' ';
+		$navLinks = array();
+		foreach ( $this->header_links as $msg => $query_param ) {
+			$navLinks[] = $this->createHeaderLink( $msg, $query_param );
+		}
 
-		if ( $this->mMode == '' ) {
-			$navLine .= Xml::element( 'strong',
-				null,
-				wfMessage( 'approvedrevs-approvedpages' )->text()
-			);
-		} else {
-			$navLine .= Xml::element( 'a',
-				array( 'href' => $approvedPagesTitle->getLocalURL() ),
-				wfMessage( 'approvedrevs-approvedpages' )->text()
+		$navLine = wfMessage( 'approvedrevs-view' )->text() . ' ' . implode(' | ', $navLinks);;
+		$header = Xml::tags( 'p', null, $navLine ) . "\n";
+
+		if ( $this->mMode == 'invalid' ) {
+			$header .= Xml::tags(
+				'p', array( 'style' => 'font-style:italic;' ),
+				wfMessage( 'approvedrevs-invalid-description' )->parse()
 			);
 		}
 
-		$navLine .= ' | ';
+		$out = Xml::tags(
+			'div', array( 'class' => 'specialapprovedrevs-header' ), $header
+		);
 
-		if ( $this->mMode == 'notlatest' ) {
-			$navLine .= Xml::element( 'strong',
+		return $out;
+	}
+
+	function createHeaderLink( $msg, $query_param ) {
+
+		$approvedPagesTitle = SpecialPage::getTitleFor( $this->getName() );
+
+		if ( $this->mMode == $query_param ) {
+			return Xml::element( 'strong',
 				null,
-				wfMessage( 'approvedrevs-notlatestpages' )->text()
+				wfMessage( $msg )->text()
 			);
 		} else {
-			$navLine .= Xml::element( 'a',
-				array( 'href' => $approvedPagesTitle->getLocalURL( array( 'show' => 'notlatest' ) ) ),
-				wfMessage( 'approvedrevs-notlatestpages' )->text()
+			$show = ( $query_param == '' )
+				? array() : array( 'show' => $query_param );
+			return Xml::element( 'a',
+				array( 'href' => $approvedPagesTitle->getLocalURL( $show ) ),
+				wfMessage( $msg )->text()
 			);
 		}
 
-		$navLine .= ' | ';
-
-		if ( $this->mMode == 'unapproved' ) {
-			$navLine .= Xml::element( 'strong',
-				null,
-				wfMessage( 'approvedrevs-unapprovedpages' )->text()
-			);
-		} else {
-			$navLine .= Xml::element( 'a',
-				array( 'href' => $approvedPagesTitle->getLocalURL( array( 'show' => 'unapproved' ) ) ),
-				wfMessage( 'approvedrevs-unapprovedpages' )->text()
-			);
-		}
-
-		return Xml::tags( 'p', null, $navLine ) . "\n";
 	}
 
 	/**
@@ -80,12 +87,14 @@ class SpecialApprovedRevsPage extends QueryPage {
 	function linkParameters() {
 		$params = array();
 
-		if ( $this->mMode == 'notlatest' ) {
-			$params['show'] = 'notlatest';
-		} elseif ( $this->mMode == 'unapproved' ) {
+		if ( $this->mMode == 'unapproved' ) {
 			$params['show'] = 'unapproved';
-		} else { // all approved pages
+		} elseif ( $this->mMode == 'all' ) {
+			$params['show'] = 'all';
+		} elseif ( $this->mMode == 'invalid' ) { // all approved pages
+			$params['show'] = 'invalid';
 		}
+		// else use default "notlatest"
 
 		return $params;
 	}
@@ -102,79 +111,117 @@ class SpecialApprovedRevsPage extends QueryPage {
 	 * @see QueryPage::getSQL()
 	 */
 	function getQueryInfo() {
-		global $egApprovedRevsNamespaces;
 
-		$mainCondsString = "( pp_propname = 'approvedrevs' AND pp_value = 'y' )";
-		if ( count( $egApprovedRevsNamespaces ) > 0 ) {
-			$mainCondsString .= " OR ( p.page_namespace IN ( " . implode( ',', $egApprovedRevsNamespaces ) . " ) )";
-		}
+		$tables = array(
+			'ar' => 'approved_revs',
+			'p' => 'page',
+			'pp' => 'page_props',
+		);
 
-		if ( $this->mMode == 'notlatest' ) {
-			return array(
-				'tables' => array(
-					'ar' => 'approved_revs',
-					'p' => 'page',
-					'pp' => 'page_props',
-				),
-				'fields' => array(
-					'p.page_id AS id',
-					'ar.rev_id AS rev_id',
-					'p.page_latest AS latest_id',
-				),
-				'join_conds' => array(
-					'p' => array(
-						'JOIN', 'ar.page_id=p.page_id'
-					),
-					'pp' => array(
-						'LEFT OUTER JOIN', 'ar.page_id=pp_page'
-					),
-				),
-				'conds' => "p.page_latest != ar.rev_id AND ( $mainCondsString )"
-			);
+		$fields = array(
+			// required for all all
+			'p.page_id AS id',
+
+			// not required for "unapproved", but won't hurt anything
+			'ar.rev_id AS rev_id',
+
+			// required for all
+			'p.page_latest AS latest_id',
+		);
+
+		$join_conds = array(
+			'p' => array(
+				'JOIN', 'ar.page_id=p.page_id'
+			),
+			'pp' => array(
+				'LEFT OUTER JOIN', 'ar.page_id=pp_page'
+			),
+		);
+
+		$bannedNSCheck = '(p.page_namespace NOT IN (' . implode( ',' , ApprovedRevs::$bannedNamespaceIds ) . '))';
+
+		#
+		#	ALLPAGES: all approved pages
+		#	also includes $this->mMode == 'invalid', see formatResult()
+		#
+		if ( $this->mMode == 'all' ) {
+
+			$conds = $bannedNSCheck; // get everything from approved_revs table
+			// keep default:
+			// $conds = "$namespacesString " .
+			//       "(pp_propname = 'approvedrevs' AND pp_value = 'y')";
+
+		#
+		#	UNAPPROVED
+		#
 		} elseif ( $this->mMode == 'unapproved' ) {
-			return array(
-				'tables' => array(
-					'ar' => 'approved_revs',
-					'p' => 'page',
-					'pp' => 'page_props',
-				),
-				'fields' => array(
-					'p.page_id AS id',
-					'p.page_latest AS latest_id'
-				),
-				'join_conds' => array(
-					'ar' => array(
-						'LEFT OUTER JOIN', 'p.page_id=ar.page_id'
-					),
-					'pp' => array(
-						'LEFT OUTER JOIN', 'ar.page_id=pp_page'
-					),
-				),
-				'conds' => "ar.page_id IS NULL AND ( $mainCondsString )"
+
+			$tables['c'] = 'categorylinks';
+			$join_conds['p'] = array(
+				'RIGHT OUTER JOIN', 'ar.page_id=p.page_id' // override
 			);
-		} else { // all approved pages
-			return array(
-				'tables' => array(
-					'ar' => 'approved_revs',
-					'p' => 'page',
-					'pp' => 'page_props',
-				),
-				'fields' => array(
-					'p.page_id AS id',
-					'ar.rev_id AS rev_id',
-					'p.page_latest AS latest_id',
-				),
-				'join_conds' => array(
-					'p' => array(
-						'JOIN', 'ar.page_id=p.page_id',
-					),
-					'pp' => array(
-						'LEFT OUTER JOIN', 'ar.page_id=pp_page'
-					),
-				),
-				'conds' => $mainCondsString
+			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
+
+			list( $ns, $cat, $pg ) =
+				ApprovedRevs::getApprovabilityStringsForDB();
+			$conds  = ( $ns === '' )  ? '' : "(p.page_namespace IN ($ns)) OR ";
+			$conds .= ( $cat === '' ) ? '' : "(c.cl_to IN ($cat)) OR ";
+			$conds .= ( $pg === '' )  ? '' : "(p.page_id IN ($pg)) OR ";
+			$conds .= "(pp_propname = 'approvedrevs' AND pp_value = 'y')";
+			$conds  = "ar.page_id IS NULL AND ($conds) AND $bannedNSCheck";
+
+		#
+		#	INVALID PERMISSIONS
+		#
+		} else if ( $this->mMode == 'invalid' ) {
+
+			$tables['c'] = 'categorylinks';
+			$join_conds['p'] = array(
+				'LEFT OUTER JOIN', 'ar.page_id=p.page_id' // override
 			);
+			$join_conds['c'] = array( 'LEFT OUTER JOIN', 'p.page_id=cl_from' );
+
+			list( $ns, $cat, $pg ) =
+				ApprovedRevs::getApprovabilityStringsForDB();
+			$conds = "";
+			$conds .= ( $ns === '' )
+				? '' : "(p.page_namespace NOT IN ($ns)) AND ";
+			$conds .= ( $cat === '' )
+				? ''
+				: "(p.page_id NOT IN (" .
+				"SELECT DISTINCT cl_from FROM categorylinks WHERE cl_to IN " .
+				"($cat))) AND ";
+			$conds .= ( $pg === '' )  ? '' : "(p.page_id NOT IN ($pg)) AND ";
+			$conds .= "(pp_propname IS NULL OR " .
+				"NOT (pp_propname = 'approvedrevs' AND pp_value = 'y'))";
+
+			$options = array( 'DISTINCT' => true );
+
+		#
+		#	NOTLATEST
+		#
+		} else {
+
+			// gets pages in approved_revs table that
+			//   (a) are not the latest rev
+			//   (b) satisfy ApprovedRevs::$permissions
+			// $tables['c'] = 'categorylinks';
+			// $join_conds['c'] = array( 'LEFT OUTER JOIN',
+			//                           'p.page_id=cl_from' );
+			// $conds = "p.page_latest != ar.rev_id AND ($conds)";
+			$conds = "p.page_latest != ar.rev_id AND $bannedNSCheck";
+
 		}
+
+		$return = array(
+			'tables' => $tables,
+			'fields' => $fields,
+			'join_conds' => $join_conds,
+			'conds' => $conds,
+			'options' => array( 'DISTINCT' ),
+		);
+
+		return $return;
 	}
 
 	function getOrder() {
@@ -192,43 +239,30 @@ class SpecialApprovedRevsPage extends QueryPage {
 	function formatResult( $skin, $result ) {
 		$title = Title::newFromId( $result->id );
 
-		if( !ApprovedRevs::pageIsApprovable( $title ) ) {
-			return false;
-		}
-
 		$pageLink = Linker::link( $title );
 
 		if ( $this->mMode == 'unapproved' ) {
+
 			global $egApprovedRevsShowApproveLatest;
 
 			$line = $pageLink;
 			if ( $egApprovedRevsShowApproveLatest &&
-				$title->userCan( 'approverevisions' ) ) {
-				$line .= ' (' . Xml::element( 'a',
-					array( 'href' => $title->getLocalUrl(
-						array(
-							'action' => 'approve',
-							'oldid' => $result->latest_id
-						)
-					) ),
+				ApprovedRevs::userCanApprove( $title ) ) {
+				$line .= ' (' . Xml::element(
+					'a',
+					array(
+						'href' => $title->getLocalUrl( array( 'action' => 'approve', 'oldid' => $result->latest_id ) )
+					),
 					wfMessage( 'approvedrevs-approvelatest' )->text()
 				) . ')';
 			}
 
 			return $line;
-		} elseif ( $this->mMode == 'notlatest' ) {
-			$diffLink = Xml::element( 'a',
-				array( 'href' => $title->getLocalUrl(
-					array(
-						'diff' => $result->latest_id,
-						'oldid' => $result->rev_id
-					)
-				) ),
-				wfMessage( 'approvedrevs-difffromlatest' )->text()
-			);
+		} elseif ( $this->mMode == 'invalid' ) {
+			return $pageLink;
 
-			return "$pageLink ($diffLink)";
-		} else { // main mode (pages with an approved revision)
+		// main mode (pages with an approved revision)
+		} elseif ( $this->mMode == 'all' ) {
 			global $wgUser, $wgOut, $wgLang;
 
 			$additionalInfo = Xml::element( 'span',
@@ -241,15 +275,23 @@ class SpecialApprovedRevsPage extends QueryPage {
 			// Get data on the most recent approval from the
 			// 'approval' log, and display it if it's there.
 			$loglist = new LogEventsList( $wgOut->getSkin(), $wgOut );
-			$pager = new LogPager( $loglist, 'approval', '', $title->getText() );
+			$pager = new LogPager(
+				$loglist, 'approval', '', $title->getText()
+			);
 			$pager->mLimit = 1;
 			$pager->doQuery();
 			$row = $pager->mResult->fetchObject();
 
 			if ( !empty( $row ) ) {
-				$timestamp = $wgLang->timeanddate( wfTimestamp( TS_MW, $row->log_timestamp ), true );
-				$date = $wgLang->date( wfTimestamp( TS_MW, $row->log_timestamp ), true );
-				$time = $wgLang->time( wfTimestamp( TS_MW, $row->log_timestamp ), true );
+				$timestamp = $wgLang->timeanddate(
+					wfTimestamp( TS_MW, $row->log_timestamp ), true
+				);
+				$date = $wgLang->date(
+					wfTimestamp( TS_MW, $row->log_timestamp ), true
+				);
+				$time = $wgLang->time(
+					wfTimestamp( TS_MW, $row->log_timestamp ), true
+				);
 				$userLink = Linker::userLink( $row->log_user, $row->user_name );
 				$additionalInfo .= ', ' . wfMessage(
 					'approvedrevs-approvedby',
@@ -262,6 +304,21 @@ class SpecialApprovedRevsPage extends QueryPage {
 			}
 
 			return "$pageLink ($additionalInfo)";
+
+		# Not latest
+		} else {
+			$diffLink = Xml::element( 'a',
+				array( 'href' => $title->getLocalUrl(
+					array(
+						'diff' => $result->latest_id,
+						'oldid' => $result->rev_id
+					)
+				) ),
+				wfMessage( 'approvedrevs-difffromlatest' )->text()
+			);
+
+			return "$pageLink ($diffLink)";
+
 		}
 	}
 

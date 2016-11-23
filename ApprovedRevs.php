@@ -9,7 +9,7 @@ if ( !defined( 'MEDIAWIKI' ) ) die();
  * @author Yaron Koren
  */
 
-define( 'APPROVED_REVS_VERSION', '0.7.3-alpha' );
+define( 'APPROVED_REVS_VERSION', '1.0.0-alpha' );
 
 // credits
 $wgExtensionCredits['other'][] = array(
@@ -23,8 +23,6 @@ $wgExtensionCredits['other'][] = array(
 
 // global variables
 $egApprovedRevsIP = dirname( __FILE__ ) . '/';
-$egApprovedRevsNamespaces = array( NS_MAIN, NS_USER, NS_PROJECT, NS_TEMPLATE, NS_HELP );
-$egApprovedRevsSelfOwnedNamespaces = array();
 $egApprovedRevsBlankIfUnapproved = false;
 $egApprovedRevsAutomaticApprovals = true;
 $egApprovedRevsShowApproveLatest = false;
@@ -82,10 +80,35 @@ $wgLogActions['approval/approve'] = 'approvedrevs-approveaction';
 $wgLogActions['approval/unapprove'] = 'approvedrevs-unapproveaction';
 
 // user rights
-$wgAvailableRights[] = 'approverevisions';
-$wgGroupPermissions['sysop']['approverevisions'] = true;
+$wgAvailableRights[] = 'approverevisions'; // deprecated
+$wgGroupPermissions['sysop']['approverevisions'] = true; // deprecated
 $wgAvailableRights[] = 'viewlinktolatest';
 $wgGroupPermissions['*']['viewlinktolatest'] = true;
+
+
+// default permissions:
+//   * Group:sysop can approve anything approvable
+//   * Namespaces Main, User, Template, Help and Project are approvable
+//     with no additional approvers
+//   * No categories or pages are approvable (unless they're within one
+//     of the above namespaces)
+$egApprovedRevsPermissions = array (
+
+	'All Pages' => array( 'group' => 'sysop' ),
+
+	'Namespace Permissions' => array (
+		NS_MAIN => array(),
+		NS_USER => array(),
+		NS_TEMPLATE => array(),
+		NS_HELP => array(),
+		NS_PROJECT => array(),
+	),
+
+	'Category Permissions' => array (),
+
+	'Page Permissions' => array ()
+
+);
 
 // ResourceLoader modules
 $wgResourceModules['ext.ApprovedRevs'] = array(

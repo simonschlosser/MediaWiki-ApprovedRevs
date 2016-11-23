@@ -32,6 +32,6 @@
 	"approvedrevs-viewlatestrev": "View the most recent revision.",
 	"approvedrevs-revision-nav": "($1) $2{{int:pipe-separator}}$3 ($4){{int:pipe-separator}}$5 ($6){{int:pipe-separator}}$7 ($8)",
 	"approvedrevs-approvedrevision": "Approved revision",
-	"right-approverevisions": "Set a certain revision of a wiki page as approved",
+	"right-approverevisions": "Set a certain revision of a wiki page as approved (deprecated)",
 	"right-viewlinktolatest": "View explanatory text at the top of pages that have an approved revision"
 }

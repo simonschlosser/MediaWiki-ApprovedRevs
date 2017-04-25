@@ -287,7 +287,7 @@ class SpecialApprovedPagesQueryPage extends QueryPage {
 
 			// Get data on the most recent approval from the
 			// 'approval' log, and display it if it's there.
-			$loglist = new LogEventsList( $wgOut->getSkin(), $wgOut );
+			$loglist = new LogEventsList( $skin, $wgOut );
 			$pager = new LogPager(
 				$loglist, 'approval', '', $title->getText()
 			);

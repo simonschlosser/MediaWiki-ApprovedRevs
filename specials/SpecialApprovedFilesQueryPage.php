@@ -231,8 +231,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 
 			// Get data on the most recent approval from the
 			// 'approval' log, and display it if it's there.
-			$sk = $wgUser->getSkin();
-			$loglist = new LogEventsList( $sk, $wgOut );
+			$loglist = new LogEventsList( $skin, $wgOut );
 			$pager = new LogPager( $loglist, 'approval', '', $title );
 			$pager->mLimit = 1;
 			$pager->doQuery();
@@ -251,7 +250,7 @@ class SpecialApprovedFilesQueryPage extends SpecialApprovedPagesQueryPage {
 				$time = $wgLang->time(
 					wfTimestamp( TS_MW, $row->log_timestamp ), true
 				);
-				$userLink = $sk->userLink( $row->log_user, $row->user_name );
+				$userLink = $skin->userLink( $row->log_user, $row->user_name );
 				$additionalInfo .= ', ' . wfMessage(
 					'approvedrevs-approvedby',
 					$userLink,

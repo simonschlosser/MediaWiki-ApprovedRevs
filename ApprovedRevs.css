@@ -13,3 +13,29 @@ span.approvedRevIsLatest {
 span.approvedRevNotLatest {
 	font-style: italic;
 }
+
+/**
+ * Highlight approved rev in revision history
+ **/
+.approved-revision {
+	background-color: #dfd !important;
+}
+li.approved-revision {
+	border-color: green !important;
+}
+tr.approved-revision td {
+	border-top: solid green 2px !important;
+	border-bottom: solid green 2px !important;
+}
+tr.approved-revision td:first-child {
+	border-left: solid green 2px !important;
+}
+tr.approved-revision td:last-child {
+	border-right: solid green 2px !important;
+}
+
+.specialapprovedrevs-header{
+	background-color:#ddd;
+	border:solid #aaa 1px;
+	padding: 3px 8px;
+}

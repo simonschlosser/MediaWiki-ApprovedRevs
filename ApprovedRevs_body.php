@@ -386,39 +386,7 @@ class ApprovedRevs {
 		self::saveApprovedRevIDInDB( $title, $rev_id );
 		$parser = new Parser();
 
-		
-		//$parsed = $parser->recursiveTagParse( $input, $frame );
-        // Since this can span different parses, we need to take account of
-        // the fact recursiveTagParse only half parses the text. or strip tags
-        // (UNIQ's) will be exposed. (Alternative would be to just call
-        // $parser->replaceLinkHolders() and $parser->mStripState->unstripBoth()
-        // right here right now.
 
-
-
-    // Create in-memory ParserOutput transfer object
-    $parserData = ApplicationFactory::getInstance()->newParserData(
-        $parser->getTitle(),
-        $parser->getOutput()
-    );
-
-    $subject = $parserData->getSubject();
-
-    // Add individual instances
-        $dataValue = DataValueFactory::getInstance()->newPropertyValue(
-            "has approval", // Text value
-            trim( "yes" ), // Text value
-            false,
-            $subject
-        );
-
-
-        // Adds the object to the SemanticData container you could also use
-        // $parserData->getSemanticData()->addPropertyObjectValue( ...)
-        $parserData->addDataValue( $dataValue );
-
-    // Ensures that objects are pushed to the ParserOutput
-    $parserData->pushSemanticDataToParserOutput();
 
 		
 		

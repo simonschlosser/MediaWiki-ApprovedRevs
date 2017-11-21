@@ -1,6 +1,8 @@
 <?php
 
 use MediaWiki\MediaWikiServices;
+use SMW\ApplicationFactory;
+use SMW\DataValueFactory;
 
 /**
  * Functions for the Approved Revs extension called by hooks in the MediaWiki
@@ -24,6 +26,59 @@ class ApprovedRevsHooks {
 		);
 	}
 
+	function wfSampleParserInit( Parser &$parser ) {
+
+        $parser->setHook( 'setprop', 'wfSampleSetProp' );
+        // Always return true from this function. The return value does not denote
+        // success or otherwise have meaning - it just must always be true.
+        return true;
+       }
+
+	function wfSampleSetProp( $input, array $args, Parser $parser, PPFrame $frame ) {
+        $parsed = $parser->recursiveTagParse( $input, $frame );
+        // Since this can span different parses, we need to take account of
+        // the fact recursiveTagParse only half parses the text. or strip tags
+        // (UNIQ's) will be exposed. (Alternative would be to just call
+        // $parser->replaceLinkHolders() and $parser->mStripState->unstripBoth()
+        // right here right now.
+
+    // Create in-memory ParserOutput transfer object
+    $parserData = ApplicationFactory::getInstance()->newParserData(
+        $parser->getTitle(),
+        $parser->getOutput()
+    );
+
+    $subject = $parserData->getSubject();
+
+    // Add individual instances
+        $dataValue = DataValueFactory::getInstance()->newPropertyValue(
+            "has approval", // Text value
+            trim( "yes" ), // Text value
+            false,
+            $subject
+        );
+
+        // Adds the object to the SemanticData container you could also use
+        // $parserData->getSemanticData()->addPropertyObjectValue( ...)
+        $parserData->addDataValue( $dataValue );
+
+    // Ensures that objects are pushed to the ParserOutput
+    $parserData->pushSemanticDataToParserOutput();
+
+
+        $serialized = serialize( $parser->serializeHalfParsedText( $parsed ) );
+        $parser->getOutput()->setProperty( 'SimpleSetPropExtension', $serialized );
+
+        // Note if other pages change based on a property, you should see $wgPagePropLinkInvalidations
+        // to automatically invalidate dependant page. In this example that would be pages that
+        // use <getprop page="something>. However that would require adding a linking table
+        // (since none of the standard ones work for this example) which is a bit beyond the
+        // scope of this simple example.
+
+        return '';
+}
+
+	
 	/**
 	 * "noindex" and "nofollow" meta-tags are added to every revision page,
 	 * so that search engines won't index them - remove those if this is

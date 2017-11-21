@@ -74,6 +74,7 @@ $wgSpecialPages['ApprovedPages'] = 'SpecialApprovedPages';
 $wgSpecialPages['ApprovedFiles'] = 'SpecialApprovedFiles';
 
 // hooks
+$wgHooks['ParserFirstCallInit'][] = 'wfSampleParserInit';
 $wgHooks['ArticleEditUpdates'][] = 'ApprovedRevsHooks::updateLinksAfterEdit';
 $wgHooks['PageContentSaveComplete'][] = 'ApprovedRevsHooks::setLatestAsApproved';
 $wgHooks['PageContentSaveComplete'][] = 'ApprovedRevsHooks::setSearchText';
